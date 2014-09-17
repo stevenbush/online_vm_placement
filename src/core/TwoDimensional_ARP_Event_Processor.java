@@ -17,18 +17,21 @@ import java.util.LinkedList;
 
 import org.apache.commons.math3.analysis.function.Max;
 
-public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor {
+public class TwoDimensional_ARP_Event_Processor extends
+		Abstract_Event_Processor {
 
 	/** the hash table used to store the vms */
-	private Hashtable<String, VM> vm_table;
+	public Hashtable<String, VM> vm_table;
 	/** the list used to store the host */
-	private ArrayList<ARP_host> host_list;
+	public ArrayList<ARP_host> host_list;
 	/** the overload threshold */
 	private Double overload_threshold;
 	/** the underload threshold */
 	private Double underload_threshold;
 	/** a file writer used to write log */
 	private BufferedWriter log_writer;
+	/** a file writer used to write hostlog */
+	private BufferedWriter host_log_writer;
 	/** the number of migrations */
 	private Integer migration_num;
 	/** the total number of vms */
@@ -49,14 +52,18 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 	private Double total_cpu_workload_size;
 	/** the total mem workload size */
 	private Double total_mem_workload_size;
+	/** the time to record the pre time */
+	private long pre_time;
 
-	public TwoDimensional_ARP_Event_Processor(BufferedWriter writer) {
+	public TwoDimensional_ARP_Event_Processor(BufferedWriter writer,
+			BufferedWriter hostwriter) {
 		super();
 		this.overload_threshold = 1.0;
 		this.underload_threshold = 2.0 / 3.0;
 		this.vm_table = new Hashtable<>();
 		this.host_list = new ArrayList<ARP_host>();
 		this.log_writer = writer;
+		this.host_log_writer = hostwriter;
 		this.migration_num = 0;
 		this.total_vm_num = (long) 0;
 		this.TO_Bin_list = new LinkedList<>();
@@ -67,6 +74,7 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 		this.UL_Bin_list = new LinkedList<>();
 		this.total_cpu_workload_size = 0.0;
 		this.total_mem_workload_size = 0.0;
+		this.pre_time = 0;
 	}
 
 	/**
@@ -170,7 +178,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 	 * @param des_host
 	 */
 	private void move_group(ARP_host src_host, ARP_host des_host) {
-		ArrayList<String> candidate_group = src_host.get_group_intwo(vm_table).get(0);
+		ArrayList<String> candidate_group = src_host.get_group_intwo(vm_table)
+				.get(0);
 		for (String vm_id : candidate_group) {
 			VM current_vm = vm_table.get(vm_id);
 			src_host.delete_vm(current_vm);
@@ -191,7 +200,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 	 */
 	private void fill(ARP_host host) {
 		while ((host.getMax_uitilization() <= 2.0 / 3.0)
-				&& ((!this.TO_Bin_list.isEmpty()) || (!this.ST_Bin_list.isEmpty()))) {
+				&& ((!this.TO_Bin_list.isEmpty()) || (!this.ST_Bin_list
+						.isEmpty()))) {
 			if (!this.UT_Bin_list.isEmpty()) {
 				ARP_host current_bin = this.UT_Bin_list.get(0);
 				this.move_group(current_bin, host);
@@ -307,7 +317,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 	 * @param host
 	 */
 	private void release(ARP_host host) {
-		ArrayList<ArrayList<String>> groups = host.get_group_intwo(this.vm_table);
+		ArrayList<ArrayList<String>> groups = host
+				.get_group_intwo(this.vm_table);
 		for (ArrayList<String> group : groups) {
 			this.clear_bin_type(host);
 			this.fillwith(host, group);
@@ -322,7 +333,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 	private void adjust(ARP_host host) {
 		if (host.getL_num_intwo() > 0) {
 			if (host.getMax_uitilization() > this.overload_threshold) {
-				ArrayList<ArrayList<String>> groups = host.get_group_intwo(this.vm_table);
+				ArrayList<ArrayList<String>> groups = host
+						.get_group_intwo(this.vm_table);
 				for (ArrayList<String> group : groups) {
 					this.clear_bin_type(host);
 					this.fillwith(host, group);
@@ -355,7 +367,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 			min_host = host2;
 			max_host = host1;
 		}
-		while (min_host.getMax_uitilization() > 0 && max_host.getMax_uitilization() <= this.underload_threshold) {
+		while (min_host.getMax_uitilization() > 0
+				&& max_host.getMax_uitilization() <= this.underload_threshold) {
 			this.move_group(min_host, max_host);
 			this.migration_num = this.migration_num + 1;
 		}
@@ -390,14 +403,17 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					&& Math.max(new_vm.getCpu_demand(), new_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 				this.insert(new_vm);
 			} else {
-				// using the fillwith operation to put this T-item to a suitable bin
+				// using the fillwith operation to put this T-item to a suitable
+				// bin
 				ArrayList<String> T_group = new ArrayList<>();
 				T_group.add(new_vm.getVm_id());
 				this.fillwith(T_group);
 			}
 
-			this.total_cpu_workload_size = this.total_cpu_workload_size + cpu_demand;
-			this.total_mem_workload_size = this.total_mem_workload_size + mem_demand;
+			this.total_cpu_workload_size = this.total_cpu_workload_size
+					+ cpu_demand;
+			this.total_mem_workload_size = this.total_mem_workload_size
+					+ mem_demand;
 		}
 
 	}
@@ -443,7 +459,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					&& Math.max(new_cpu_demand, new_mem_demand) <= 1.0 / 3.0
 					&& Math.max(new_cpu_demand, new_mem_demand) > 0.0) { // B-->T
 				this.clear_bin_type(deployed_host);
-				ArrayList<ArrayList<String>> groups = deployed_host.get_group_intwo(this.vm_table);
+				ArrayList<ArrayList<String>> groups = deployed_host
+						.get_group_intwo(this.vm_table);
 				for (ArrayList<String> group : groups) {
 					if (!this.UL_Bin_list.isEmpty()) {
 						ARP_host des_host = this.UL_Bin_list.get(0);
@@ -507,7 +524,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					&& Math.max(new_cpu_demand, new_mem_demand) <= 1.0 / 3.0
 					&& Math.max(new_cpu_demand, new_mem_demand) > 0.0) { // L-->T
 				this.clear_bin_type(deployed_host);
-				ArrayList<ArrayList<String>> groups = deployed_host.get_group_intwo(this.vm_table);
+				ArrayList<ArrayList<String>> groups = deployed_host
+						.get_group_intwo(this.vm_table);
 				for (ArrayList<String> group : groups) {
 					if (!this.UL_Bin_list.isEmpty()) {
 						ARP_host des_host = this.UL_Bin_list.get(0);
@@ -545,7 +563,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					for (String id : deployed_host.getVm_list()) {
 						VM vm = vm_table.get(id);
 						if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 1.0 / 2.0
-								&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1.0 / 3.0) { // S-item
+								&& Math.max(vm.getCpu_demand(),
+										vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 							S_item = vm;
 						}
 					}
@@ -565,7 +584,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					for (String id : deployed_host.getVm_list()) {
 						VM vm = vm_table.get(id);
 						if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 1.0 / 2.0
-								&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1.0 / 3.0) { // S-item
+								&& Math.max(vm.getCpu_demand(),
+										vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 							S_item = vm;
 						}
 					}
@@ -581,12 +601,14 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					&& Math.max(new_cpu_demand, new_mem_demand) <= 1.0 / 3.0
 					&& Math.max(new_cpu_demand, new_mem_demand) > 0.0) { // S-->T
 				this.clear_bin_type(deployed_host);
-				if (deployed_host.getS_num_intwo() > 0 && !this.US_Bin_list.isEmpty()) {
+				if (deployed_host.getS_num_intwo() > 0
+						&& !this.US_Bin_list.isEmpty()) {
 					VM S_item = null;
 					for (String id : deployed_host.getVm_list()) {
 						VM vm = vm_table.get(id);
 						if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 1.0 / 2.0
-								&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1.0 / 3.0) { // S-item
+								&& Math.max(vm.getCpu_demand(),
+										vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 							S_item = vm;
 						}
 					}
@@ -597,7 +619,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					this.migration_num = this.migration_num + 1;
 				}
 
-				ArrayList<ArrayList<String>> groups = deployed_host.get_group_intwo(this.vm_table);
+				ArrayList<ArrayList<String>> groups = deployed_host
+						.get_group_intwo(this.vm_table);
 				for (ArrayList<String> group : groups) {
 					if (!this.UL_Bin_list.isEmpty()) {
 						ARP_host des_host = this.UL_Bin_list.get(0);
@@ -646,11 +669,13 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					for (String id : deployed_host.getVm_list()) {
 						VM vm = vm_table.get(id);
 						if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 2.0 / 3.0
-								&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1.0 / 2.0) { // L-item
+								&& Math.max(vm.getCpu_demand(),
+										vm.getMem_demand()) > 1.0 / 2.0) { // L-item
 							L_item = vm;
 						}
 					}
-					// open a new bin to accommodate this L-item and fill this L-bin
+					// open a new bin to accommodate this L-item and fill this
+					// L-bin
 					deployed_host.delete_vm(L_item);
 					ARP_host new_host = new ARP_host();
 					L_item.setDeployed_host(new_host);
@@ -673,11 +698,13 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					for (String id : deployed_host.getVm_list()) {
 						VM vm = vm_table.get(id);
 						if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 2.0 / 3.0
-								&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1.0 / 2.0) { // L-item
+								&& Math.max(vm.getCpu_demand(),
+										vm.getMem_demand()) > 1.0 / 2.0) { // L-item
 							L_item = vm;
 						}
 					}
-					// open a new bin to accommodate this L-item and fill this L-bin
+					// open a new bin to accommodate this L-item and fill this
+					// L-bin
 					deployed_host.delete_vm(L_item);
 					ARP_host new_host = new ARP_host();
 					L_item.setDeployed_host(new_host);
@@ -707,7 +734,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					this.update_bin_type(us_host);
 					this.migration_num = this.migration_num + 1;
 
-					ArrayList<ArrayList<String>> groups = deployed_host.get_group_intwo(this.vm_table);
+					ArrayList<ArrayList<String>> groups = deployed_host
+							.get_group_intwo(this.vm_table);
 					for (ArrayList<String> group : groups) {
 						if (!this.UL_Bin_list.isEmpty()) {
 							ARP_host ul_host = this.UL_Bin_list.get(0);
@@ -750,7 +778,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					group.add(vm_id);
 					this.fillwith(deployed_host, group);
 				} else {
-					if (deployed_host.getMax_uitilization() <= 2.0 / 3.0 && !this.UT_Bin_list.isEmpty()) {
+					if (deployed_host.getMax_uitilization() <= 2.0 / 3.0
+							&& !this.UT_Bin_list.isEmpty()) {
 						if (!UT_Bin_list.contains(deployed_host)) {
 							ARP_host UT_host = UT_Bin_list.getFirst();
 							this.merge(deployed_host, UT_host);
@@ -767,8 +796,10 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 			if (deployed_host.getVm_list().isEmpty()) {
 				this.remove_host(deployed_host);
 			}
-			this.total_cpu_workload_size = this.total_cpu_workload_size - original_cpu_demand + new_cpu_demand;
-			this.total_mem_workload_size = this.total_mem_workload_size - original_mem_demand + new_mem_demand;
+			this.total_cpu_workload_size = this.total_cpu_workload_size
+					- original_cpu_demand + new_cpu_demand;
+			this.total_mem_workload_size = this.total_mem_workload_size
+					- original_mem_demand + new_mem_demand;
 		}
 	}
 
@@ -786,12 +817,17 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 				if (deployed_host.getVm_list().isEmpty()) {
 					this.remove_host(deployed_host);
 				}
-			} else if (Math.max(finish_vm.getCpu_demand(), finish_vm.getMem_demand()) <= (2.0 / 3.0)
-					&& Math.max(finish_vm.getCpu_demand(), finish_vm.getMem_demand()) > 1.0 / 2.0) { // L-item
+			} else if (Math.max(finish_vm.getCpu_demand(),
+					finish_vm.getMem_demand()) <= (2.0 / 3.0)
+					&& Math.max(finish_vm.getCpu_demand(),
+							finish_vm.getMem_demand()) > 1.0 / 2.0) { // L-item
 				this.clear_bin_type(deployed_host);
-				ArrayList<ArrayList<String>> groups = deployed_host.get_group_intwo(this.vm_table);
+				ArrayList<ArrayList<String>> groups = deployed_host
+						.get_group_intwo(this.vm_table);
 				for (ArrayList<String> group : groups) {
-					if (!this.UL_Bin_list.isEmpty()) { // if we have a unfill L-bin put the T-group to the existing
+					if (!this.UL_Bin_list.isEmpty()) { // if we have a unfill
+														// L-bin put the T-group
+														// to the existing
 														// unfill L-bin
 						ARP_host des_host = this.UL_Bin_list.get(0);
 						for (String id : group) {
@@ -802,8 +838,13 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 						}
 						this.update_bin_type(des_host);
 						this.migration_num = this.migration_num + 1;
-					} else if (!this.UT_Bin_list.isEmpty()) { // if we have a unfill T-bin put this T-item into the
-																// existing UT-bin
+					} else if (!this.UT_Bin_list.isEmpty()) { // if we have a
+																// unfill T-bin
+																// put this
+																// T-item into
+																// the
+																// existing
+																// UT-bin
 						ARP_host des_host = UT_Bin_list.get(0);
 						for (String id : group) {
 							VM current_vm = vm_table.get(id);
@@ -822,15 +863,20 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 					this.remove_host(deployed_host);
 				}
 
-			} else if (Math.max(finish_vm.getCpu_demand(), finish_vm.getMem_demand()) <= 1.0 / 2.0
-					&& Math.max(finish_vm.getCpu_demand(), finish_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
+			} else if (Math.max(finish_vm.getCpu_demand(),
+					finish_vm.getMem_demand()) <= 1.0 / 2.0
+					&& Math.max(finish_vm.getCpu_demand(),
+							finish_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 				this.clear_bin_type(deployed_host);
-				if (deployed_host.getS_num_intwo() > 0 && !this.US_Bin_list.isEmpty()) {
+				if (deployed_host.getS_num_intwo() > 0
+						&& !this.US_Bin_list.isEmpty()) {
 					VM S_item = null;
 					for (String id : deployed_host.getVm_list()) {
 						VM current_vm = vm_table.get(id);
-						if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0
-								&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
+						if (Math.max(current_vm.getCpu_demand(),
+								current_vm.getMem_demand()) <= 1.0 / 2.0
+								&& Math.max(current_vm.getCpu_demand(),
+										current_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 							S_item = current_vm;
 						}
 					}
@@ -849,7 +895,8 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 				if (deployed_host.getL_num_intwo() > 0) {
 					this.adjust(deployed_host);
 				} else {
-					if (deployed_host.getMax_uitilization() <= 2.0 / 3.0 && !this.UT_Bin_list.isEmpty()) {
+					if (deployed_host.getMax_uitilization() <= 2.0 / 3.0
+							&& !this.UT_Bin_list.isEmpty()) {
 						if (!UT_Bin_list.contains(deployed_host)) {
 							ARP_host UT_host = UT_Bin_list.getFirst();
 							this.merge(deployed_host, UT_host);
@@ -867,8 +914,10 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 				}
 			}
 
-			this.total_cpu_workload_size = this.total_cpu_workload_size - finish_vm.getCpu_demand();
-			this.total_mem_workload_size = this.total_mem_workload_size - finish_vm.getMem_demand();
+			this.total_cpu_workload_size = this.total_cpu_workload_size
+					- finish_vm.getCpu_demand();
+			this.total_mem_workload_size = this.total_mem_workload_size
+					- finish_vm.getMem_demand();
 			vm_table.remove(vm_id);
 		}
 
@@ -879,6 +928,7 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 		String event_time = event[0];
 		String event_type = event[3];
 		Long begin_time = System.nanoTime();
+		long eventtime = Long.parseLong(event_time);
 		if (event_type.equals("1")) {
 			process_submit_event(event);
 		}
@@ -894,9 +944,12 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 		Long time_overhead = end_time - begin_time;
 
 		// event_time+time_overhead+migrations_number+host_number+current_vm_number+total_vm_number+cpu_workload+mem_workload
-		String log_string = event_time + "," + String.valueOf(time_overhead) + "," + String.valueOf(this.migration_num)
-				+ "," + String.valueOf(this.host_list.size()) + "," + String.valueOf(this.vm_table.size()) + ","
-				+ String.valueOf(this.total_vm_num) + "," + String.valueOf(this.total_cpu_workload_size) + ","
+		String log_string = event_time + "," + String.valueOf(time_overhead)
+				+ "," + String.valueOf(this.migration_num) + ","
+				+ String.valueOf(this.host_list.size()) + ","
+				+ String.valueOf(this.vm_table.size()) + ","
+				+ String.valueOf(this.total_vm_num) + ","
+				+ String.valueOf(this.total_cpu_workload_size) + ","
 				+ String.valueOf(this.total_mem_workload_size);
 
 		// record log information
@@ -904,6 +957,26 @@ public class TwoDimensional_ARP_Event_Processor extends Abstract_Event_Processor
 			this.log_writer.write(log_string);
 			this.log_writer.newLine();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			if (eventtime - pre_time >= 60000000) {
+				this.host_log_writer.write(host_list.get(0)
+						.getCpu_utilization()
+						+ "-"
+						+ host_list.get(0).getMem_utilization());
+
+				for (int i = 1; i < host_list.size(); i++) {
+					this.host_log_writer.write(","
+							+ host_list.get(i).getCpu_utilization() + "-"
+							+ host_list.get(i).getMem_utilization());
+				}
+				this.host_log_writer.newLine();
+				this.pre_time = eventtime;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

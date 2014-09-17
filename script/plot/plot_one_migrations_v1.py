@@ -201,9 +201,9 @@ for inputfile in host_path:
 fig, ax = plt.subplots()
      
 # plt.plot(bestfit_result_average_migrations_list, label='bestfit Average Migrations Number')
-plt.plot(ARP_result_average_migrations_list, 'b', label='ARP Average Number of Migrations')
+plt.plot(ARP_result_average_migrations_list, 'r', label='ARP Average Number of Migrations')
 plt.plot(ORA_result_average_migrations_list, 'g', label='ORA Average Number of Migrations')
-plt.plot(ROBP_result_average_migrations_list, 'r', label='ROBP Average Number of Migrations')
+plt.plot(ROBP_result_average_migrations_list, 'b', label='AOBP Average Number of Migrations')
     
 # plt.tight_layout()
      
@@ -215,7 +215,7 @@ plt.grid(True)
 ax.set_xticks(range(0, len(ARP_result_average_migrations_list), 2 * (24 * 3600) / period_seconds))
 ax.set_xticklabels(range(0, 1 + len(ARP_result_average_migrations_list) / ((24 * 3600) / period_seconds), 2))
 
-plt.ylim(0.8, 1.8)
+plt.ylim(0.5, 2.0)
      
 plt.savefig(outpath + plotname + '_average', dpi=300)
 plt.show()

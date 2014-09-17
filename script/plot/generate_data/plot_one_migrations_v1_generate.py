@@ -108,7 +108,7 @@ print 'len(ROBP_result_cumulative_migrations_list): ' + str(len(ROBP_result_cumu
 #         bestfit_result_cumulative_migrations_list[i] = bestfit_result_cumulative_migrations_list[i] + previous_value  
 #         previous_value = bestfit_result_cumulative_migrations_list[i]
         
-host_path = glob.glob(inputpath + '/*two*ARP*resultlog')
+host_path = glob.glob(inputpath + '/*one*ARP*resultlog')
 for inputfile in host_path:
     print inputfile
     name_list = inputfile.split("/")
@@ -138,7 +138,7 @@ for inputfile in host_path:
         ARP_result_cumulative_migrations_list[i] = ARP_result_cumulative_migrations_list[i] + previous_value  
         previous_value = ARP_result_cumulative_migrations_list[i]
 
-host_path = glob.glob(inputpath + '/*two*ORA*resultlog')
+host_path = glob.glob(inputpath + '/*one*ORA*resultlog')
 for inputfile in host_path:
     print inputfile
     name_list = inputfile.split("/")
@@ -168,7 +168,7 @@ for inputfile in host_path:
         ORA_result_cumulative_migrations_list[i] = ORA_result_cumulative_migrations_list[i] + previous_value  
         previous_value = ORA_result_cumulative_migrations_list[i]   
         
-host_path = glob.glob(inputpath + '/*two*ROBP*resultlog')
+host_path = glob.glob(inputpath + '/*one*ROBP*resultlog')
 for inputfile in host_path:
     print inputfile
     name_list = inputfile.split("/")
@@ -197,27 +197,42 @@ for inputfile in host_path:
     for i in range(len(ROBP_result_cumulative_migrations_list)):
         ROBP_result_cumulative_migrations_list[i] = ROBP_result_cumulative_migrations_list[i] + previous_value  
         previous_value = ROBP_result_cumulative_migrations_list[i] 
-     
-fig, ax = plt.subplots()
-     
-# plt.plot(bestfit_result_average_migrations_list, label='bestfit Average Migrations Number')
-plt.plot(ARP_result_average_migrations_list, 'b', label='ARP Average Number of Migrations', linewidth=2)
-plt.plot(ROBP_result_average_migrations_list, 'r', label='AOBP Average Number of Migrations', linewidth=2)
-    
-# plt.tight_layout()
-     
-plt.xlabel('Time(day)')
-plt.ylabel('Average Number of Migrations (every ' + str(string.atoi(time_period) // 3600) + ' hours)')
-plt.legend(loc='best', prop={'size':10})
-     
-plt.grid(True)    
-ax.set_xticks(range(0, len(ARP_result_average_migrations_list), 2 * (24 * 3600) / period_seconds))
-ax.set_xticklabels(range(0, 1 + len(ARP_result_average_migrations_list) / ((24 * 3600) / period_seconds), 2))
 
-plt.ylim(0.5, 2.5)
-     
-plt.savefig(outpath + plotname + '_average', dpi=300)
-plt.show()
+csvfile = file('ARP_result_average_migrations_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(ARP_result_average_migrations_list)csvfile.close()
+
+csvfile = file('ORA_result_average_migrations_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(ORA_result_average_migrations_list)
+csvfile.close()
+
+csvfile = file('ROBP_result_average_migrations_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(ROBP_result_average_migrations_list)
+csvfile.close()
+    
+##fig, ax = plt.subplots()
+##     
+### plt.plot(bestfit_result_average_migrations_list, label='bestfit Average Migrations Number')
+##plt.plot(ARP_result_average_migrations_list, 'r', label='ARP Average Number of Migrations')
+##plt.plot(ORA_result_average_migrations_list, 'g', label='ORA Average Number of Migrations')
+##plt.plot(ROBP_result_average_migrations_list, 'b', label='AOBP Average Number of Migrations')
+##    
+### plt.tight_layout()
+##     
+##plt.xlabel('Time(day)')
+##plt.ylabel('Average Number of Migrations (every ' + str(string.atoi(time_period) // 3600) + ' hours)')
+##plt.legend(loc='best', prop={'size':10})
+##     
+##plt.grid(True)    
+##ax.set_xticks(range(0, len(ARP_result_average_migrations_list), 2 * (24 * 3600) / period_seconds))
+##ax.set_xticklabels(range(0, 1 + len(ARP_result_average_migrations_list) / ((24 * 3600) / period_seconds), 2))
+##
+##plt.ylim(0.5, 2.0)
+##     
+##plt.savefig(outpath + plotname + '_average', dpi=300)
+##plt.show()
 
 # fig, ax = plt.subplots()
 #      

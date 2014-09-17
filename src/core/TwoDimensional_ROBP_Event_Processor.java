@@ -20,15 +20,17 @@ import java.util.LinkedList;
 public class TwoDimensional_ROBP_Event_Processor extends
 		Abstract_Event_Processor {
 	/** the hash table used to store the vms */
-	private Hashtable<String, VM> vm_table;
+	public Hashtable<String, VM> vm_table;
 	/** the list used to store the host */
-	private ArrayList<ROBP_Host> host_list;
+	public ArrayList<ROBP_Host> host_list;
 	/** the overload threshold */
 	private Double overload_threshold;
 	/** the underload threshold */
 	private Double underload_threshold;
 	/** a file writer used to write log */
 	private BufferedWriter log_writer;
+	/** a file writer used to write hostlog */
+	private BufferedWriter host_log_writer;
 	/** the number of migrations */
 	private Integer migration_num;
 	/** the total number of vms */
@@ -61,13 +63,17 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	private Double total_cpu_workload_size;
 	/** the total mem workload size */
 	private Double total_mem_workload_size;
+	/** the time to record the pre time */
+	private long pre_time;
 
-	public TwoDimensional_ROBP_Event_Processor(BufferedWriter writer) {
+	public TwoDimensional_ROBP_Event_Processor(BufferedWriter writer,
+			BufferedWriter hostwriter) {
 		this.overload_threshold = 1.0;
 		this.underload_threshold = 3.0 / 4.0;
 		this.vm_table = new Hashtable<>();
 		this.host_list = new ArrayList<ROBP_Host>();
 		this.log_writer = writer;
+		this.host_log_writer = hostwriter;
 		this.migration_num = 0;
 		this.total_vm_num = (long) 0;
 		this.BOne_Bin_list = new LinkedList<>();
@@ -84,6 +90,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 		this.Bin_canbe_filled_M_list = new LinkedList<>();
 		this.total_cpu_workload_size = 0.0;
 		this.total_mem_workload_size = 0.0;
+		this.pre_time = 0;
 	}
 
 	/**
@@ -221,7 +228,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 */
 	private void move_group(ROBP_Host src_host, ROBP_Host des_host)
 			throws Exception {
-		System.out.println("move_group");
+		// System.out.println("move_group");
 		ArrayList<String> candidate_group = src_host.get_group_intwo(vm_table)
 				.get(0);
 		for (String vm_id : candidate_group) {
@@ -246,7 +253,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void fill(ROBP_Host host) throws Exception {
-		System.out.println("fill");
+		// System.out.println("fill");
 		while ((host.getMax_uitilization() <= 3.0 / 4.0)
 				&& ((!TO_Bin_list.isEmpty()) || (!MO_Bin_list.isEmpty()))) {
 			Boolean find_T_item = false;
@@ -320,7 +327,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void merge(ROBP_Host host1, ROBP_Host host2) throws Exception {
-		System.out.println("merge");
+		// System.out.println("merge");
 		// if B1 and B2 are UM-bin
 		if (host1.getM_num_intwo() > 0 && host1.getH_num_intwo() == 0
 				&& host1.getB_num_intwo() == 0 && host1.getL_num_intwo() == 0
@@ -481,7 +488,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void movethegap(ROBP_Host host) throws Exception {
-		System.out.println("movethegap");
+		// System.out.println("movethegap");
 		ArrayList<String> vm_id_list = (ArrayList<String>) host.getVm_list()
 				.clone();
 
@@ -559,7 +566,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private Boolean fillwithcomp(ROBP_Host host) throws Exception {
-		System.out.println("fillwithcomp");
+		// System.out.println("fillwithcomp");
 		Boolean find_L_item = false;
 		if (host.getB_num_intwo() == 1 && host.getH_num_intwo() == 0
 				&& host.getL_num_intwo() == 0 && host.getS_num_intwo() == 0
@@ -713,7 +720,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private Boolean putwithcomp(VM L_item) throws Exception {
-		System.out.println("putwithcomp");
+		// System.out.println("putwithcomp");
 		Boolean find_candidate_bin = false;
 		// find if there are some B-bin can accommodate this L-item
 		if (!BOne_Bin_list.isEmpty()) { // if there exists a B-bin containing at
@@ -913,7 +920,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void insert(VM vm) throws Exception {
-		System.out.println("insert");
+		// System.out.println("insert");
 		if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 1.0
 				&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 3.0 / 4.0) { // H-item
 			ROBP_Host new_host = new ROBP_Host();
@@ -1159,7 +1166,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void overload_handler(ROBP_Host host) throws Exception {
-		System.out.println("overload_handler");
+		// System.out.println("overload_handler");
 		VM vm_canbe_moved = null;
 		for (String id : host.getVm_list()) {
 			VM current_vm = vm_table.get(id);
@@ -1193,7 +1200,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void underload_handler(ROBP_Host host) throws Exception {
-		System.out.println("underload_handler");
+		// System.out.println("underload_handler");
 		ArrayList<VM> B_list = new ArrayList<>();
 		ArrayList<VM> L_list = new ArrayList<>();
 		ArrayList<VM> S_list = new ArrayList<>();
@@ -1520,6 +1527,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 		String event_time = event[0];
 		String event_type = event[3];
 		Long begin_time = System.nanoTime();
+		long eventtime = Long.parseLong(event_time);
 		if (event_type.equals("1")) {
 			try {
 				process_submit_event(event);
@@ -1566,6 +1574,26 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			this.log_writer.write(log_string);
 			this.log_writer.newLine();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			if (eventtime - pre_time >= 60000000) {
+				this.host_log_writer.write(host_list.get(0)
+						.getCpu_utilization()
+						+ "-"
+						+ host_list.get(0).getMem_utilization());
+
+				for (int i = 1; i < host_list.size(); i++) {
+					this.host_log_writer.write(","
+							+ host_list.get(i).getCpu_utilization() + "-"
+							+ host_list.get(i).getMem_utilization());
+				}
+				this.host_log_writer.newLine();
+				this.pre_time = eventtime;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

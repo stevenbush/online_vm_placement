@@ -9,7 +9,7 @@ import java.util.LinkedList;
 public class OneDimensional_ARP_Event_Processor extends Abstract_Event_Processor {
 
 	/** the hash table used to store the vms */
-	private Hashtable<String, VM> vm_table;
+	public Hashtable<String, VM> vm_table;
 	/** the list used to store the host */
 	private ArrayList<ARP_host> host_list;
 	/** the overload threshold */
