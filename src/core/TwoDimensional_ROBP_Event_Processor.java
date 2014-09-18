@@ -1579,14 +1579,13 @@ public class TwoDimensional_ROBP_Event_Processor extends
 
 		try {
 			if (eventtime - pre_time >= 60000000) {
-				this.host_log_writer.write(host_list.get(0)
-						.getCpu_utilization()
-						+ "-"
+				this.host_log_writer.write(eventtime + ":"
+						+ host_list.get(0).getCpu_utilization() + "~"
 						+ host_list.get(0).getMem_utilization());
 
 				for (int i = 1; i < host_list.size(); i++) {
 					this.host_log_writer.write(","
-							+ host_list.get(i).getCpu_utilization() + "-"
+							+ host_list.get(i).getCpu_utilization() + "~"
 							+ host_list.get(i).getMem_utilization());
 				}
 				this.host_log_writer.newLine();
