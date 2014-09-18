@@ -13,7 +13,7 @@ import org.apache.commons.math3.distribution.UniformRealDistribution;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
-public class generate_worst_events {
+public class generate_random_events {
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
@@ -33,8 +33,6 @@ public class generate_worst_events {
 
 		UniformRealDistribution tiny_seed_distribution = new UniformRealDistribution(0, 0.25);
 		UniformRealDistribution normal_seed_distribution = new UniformRealDistribution(0.25, 1.0);
-		// UniformRealDistribution big_seed_distribution = new
-		// UniformRealDistribution(0.75, 1.0);
 
 		Double seed_value = 0.0;
 
@@ -44,7 +42,7 @@ public class generate_worst_events {
 				CSVReader reader = new CSVReader(new FileReader(file_list[i]));
 				String[] file_path = file_list[i].getAbsolutePath().split("/");
 				String file_name = file_path[file_path.length - 1];
-				CSVWriter writer = new CSVWriter(new FileWriter(result_path + "/" + "worst-" + file_name),
+				CSVWriter writer = new CSVWriter(new FileWriter(result_path + "/" + "random-" + file_name),
 						CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 				List<String[]> items_list = reader.readAll();
 				Integer counter = 0;
@@ -60,24 +58,14 @@ public class generate_worst_events {
 						System.out.println((counter * 100) / list_size + "%");
 
 						if (tiny_size <= 0.5) {
-							seed_value = tiny_seed_distribution.sample();
-							Double upper_bound = Math.min(1 / seed_value, 2);
-							Double lower_bound = 0.5;
-							UniformRealDistribution scalling_distribution = new UniformRealDistribution(lower_bound,
-									upper_bound);
-							Double CPU = seed_value;
-							Double MEM = seed_value * scalling_distribution.sample();
+							Double CPU = tiny_seed_distribution.sample();
+							Double MEM = tiny_seed_distribution.sample();
 							item_line[6] = String.valueOf(CPU);
 							item_line[7] = String.valueOf(MEM);
 							tiny_size = tiny_size + Math.max(CPU, MEM);
 						} else {
-							seed_value = normal_seed_distribution.sample();
-							Double upper_bound = Math.min(1 / seed_value, 2);
-							Double lower_bound = 0.5;
-							UniformRealDistribution scalling_distribution = new UniformRealDistribution(lower_bound,
-									upper_bound);
-							Double CPU = seed_value;
-							Double MEM = seed_value * scalling_distribution.sample();
+							Double CPU = normal_seed_distribution.sample();
+							Double MEM = normal_seed_distribution.sample();
 							item_line[6] = String.valueOf(CPU);
 							item_line[7] = String.valueOf(MEM);
 							tiny_size = 0.0;
@@ -97,5 +85,4 @@ public class generate_worst_events {
 			}
 		}
 	}
-
 }
