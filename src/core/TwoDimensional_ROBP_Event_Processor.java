@@ -1577,6 +1577,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			e.printStackTrace();
 		}
 
+		// record host information
 		try {
 			if (eventtime - pre_time >= 60000000) {
 				this.host_log_writer.write(eventtime + ":"

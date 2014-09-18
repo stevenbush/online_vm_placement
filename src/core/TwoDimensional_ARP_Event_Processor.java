@@ -960,6 +960,7 @@ public class TwoDimensional_ARP_Event_Processor extends
 			e.printStackTrace();
 		}
 
+		// record the host information
 		try {
 			if (eventtime - pre_time >= 60000000) {
 				this.host_log_writer.write(eventtime + ":"

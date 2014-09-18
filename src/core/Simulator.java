@@ -84,10 +84,11 @@ public class Simulator {
 			} else if (algorithm_name.equals("one_ORA")) {
 				event_processor = new OneDimensional_ORA_Event_Processor(writer);
 			} else if (algorithm_name.equals("one_ARP")) {
-				event_processor = new OneDimensional_ARP_Event_Processor(writer);
+				event_processor = new OneDimensional_ARP_Event_Processor(
+						writer, hostwriter);
 			} else if (algorithm_name.equals("one_ROBP")) {
 				event_processor = new OneDimensional_ROBP_Event_Processor(
-						writer);
+						writer, hostwriter);
 			} else if (algorithm_name.equals("two_bestfit")) {
 				event_processor = new TwoDimensional_BestFit_Event_Processor(
 						writer);

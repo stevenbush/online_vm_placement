@@ -30,6 +30,8 @@ public class OneDimensional_ROBP_Event_Processor extends
 	private Double underload_threshold;
 	/** a file writer used to write log */
 	private BufferedWriter log_writer;
+	/** a file writer used to write hostlog */
+	private BufferedWriter host_log_writer;
 	/** the number of migrations */
 	private Integer migration_num;
 	/** the total number of vms */
@@ -52,13 +54,17 @@ public class OneDimensional_ROBP_Event_Processor extends
 	private Double total_cpu_workload_size;
 	/** the total mem workload size */
 	private Double total_mem_workload_size;
+	/** the time to record the pre time */
+	private long pre_time;
 
-	public OneDimensional_ROBP_Event_Processor(BufferedWriter writer) {
+	public OneDimensional_ROBP_Event_Processor(BufferedWriter writer,
+			BufferedWriter hostwriter) {
 		this.overload_threshold = 1.0;
 		this.underload_threshold = 3.0 / 4.0;
 		this.vm_table = new Hashtable<>();
 		this.host_list = new ArrayList<ROBP_Host>();
 		this.log_writer = writer;
+		this.host_log_writer = hostwriter;
 		this.migration_num = 0;
 		this.total_vm_num = (long) 0;
 		this.L_Bin_list = new LinkedList<>();
@@ -70,6 +76,7 @@ public class OneDimensional_ROBP_Event_Processor extends
 		this.UM_Bin_list = new LinkedList<>();
 		this.total_cpu_workload_size = 0.0;
 		this.total_mem_workload_size = 0.0;
+		this.pre_time = 0;
 	}
 
 	/**
@@ -882,6 +889,7 @@ public class OneDimensional_ROBP_Event_Processor extends
 		String event_time = event[0];
 		String event_type = event[3];
 		Long begin_time = System.nanoTime();
+		long eventtime = Long.parseLong(event_time);
 		if (event_type.equals("1")) {
 			try {
 				process_submit_event(event);
@@ -925,6 +933,24 @@ public class OneDimensional_ROBP_Event_Processor extends
 			this.log_writer.write(log_string);
 			this.log_writer.newLine();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// record host information
+		try {
+			if (eventtime - pre_time >= 60000000) {
+				this.host_log_writer.write(eventtime + ":"
+						+ host_list.get(0).getCpu_utilization());
+
+				for (int i = 1; i < host_list.size(); i++) {
+					this.host_log_writer.write(","
+							+ host_list.get(i).getCpu_utilization());
+				}
+				this.host_log_writer.newLine();
+				this.pre_time = eventtime;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
