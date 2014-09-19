@@ -1,7 +1,6 @@
 # calculate the number of hosts in different utilization at each time period
 
 import sys, os, glob, csv, string, math
-from numexpr.cpuinfo import cpu
 
 if len(sys.argv) < 5:
     print 'No algorithm name, input path, out path and time period.'
@@ -88,9 +87,9 @@ for inputfile in host_path:
             utilization = (cpu + mem) / 2.0
             if utilization < 0.65:
                 raw_0_list[timestamp] = raw_0_list[timestamp] + 1
-            elif max(cpu, mem) >= 0.65 and max(cpu, mem) < 0.75:
+            elif utilization >= 0.65 and utilization < 0.75:
                 raw_25_list[timestamp] = raw_25_list[timestamp] + 1
-            elif max(cpu, mem) >= 0.75 and max(cpu, mem) < 0.85:
+            elif utilization >= 0.75 and utilization < 0.85:
                 raw_50_list[timestamp] = raw_50_list[timestamp] + 1   
             else:
                 raw_75_list[timestamp] = raw_75_list[timestamp] + 1    

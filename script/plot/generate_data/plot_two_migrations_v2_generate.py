@@ -1,6 +1,4 @@
 import sys, os, glob, csv, string
-import numpy as np
-import matplotlib.pyplot as plt
 
 if len(sys.argv) < 5:
     print 'No input path, plot name, out path and time period.'
@@ -123,55 +121,13 @@ for inputfile in host_path:
         ROBP_result_cumulative_migrations_list[i] = ROBP_result_cumulative_migrations_list[i] + previous_value  
         previous_value = ROBP_result_cumulative_migrations_list[i] 
 
-csvfile = file('ARP_result_average_migrations_list.csv', 'wb')
+csvfile = file('two_ARP_result_average_migrations_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ARP_result_average_migrations_list)
 csvfile.close()
 
-csvfile = file('ROBP_result_average_migrations_list.csv', 'wb')
+csvfile = file('two_ROBP_result_average_migrations_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ROBP_result_average_migrations_list)
 csvfile.close()
      
-# #fig, ax = plt.subplots()
-# #     
-# ## plt.plot(bestfit_result_average_migrations_list, label='bestfit Average Migrations Number')
-# #plt.plot(ARP_result_average_migrations_list, 'b', label='ARP Average Number of Migrations', linewidth=2)
-# #plt.plot(ROBP_result_average_migrations_list, 'r', label='AOBP Average Number of Migrations', linewidth=2)
-# #    
-# ## plt.tight_layout()
-# #     
-# #plt.xlabel('Time(day)')
-# #plt.ylabel('Average Number of Migrations (every ' + str(string.atoi(time_period) // 3600) + ' hours)')
-# #plt.legend(loc='best', prop={'size':10})
-# #     
-# #plt.grid(True)    
-# #ax.set_xticks(range(0, len(ARP_result_average_migrations_list), 2 * (24 * 3600) / period_seconds))
-# #ax.set_xticklabels(range(0, 1 + len(ARP_result_average_migrations_list) / ((24 * 3600) / period_seconds), 2))
-# #
-# #plt.ylim(0.5, 2.5)
-# #     
-# #plt.savefig(outpath + plotname + '_average', dpi=300)
-# #plt.show()
-
-# fig, ax = plt.subplots()
-#      
-# # plt.plot(bestfit_result_cumulative_migrations_list, label='bestfit Cumulative Migrations Number')
-# plt.plot(ARP_result_cumulative_migrations_list, label='ARP Cumulative Migrations Number')
-# plt.plot(ORA_result_cumulative_migrations_list, label='ORA Cumulative Migrations Number')
-# plt.plot(ROBP_result_cumulative_migrations_list, label='ROBP Cumulative Migrations Number')
-#      
-# # plt.tight_layout()
-#      
-# plt.xlabel('Time(day)')
-# plt.ylabel('Migrations Number')
-# plt.legend(loc='best', prop={'size':12})
-#      
-# plt.grid(True)    
-# ax.set_xticks(range(0, len(ARP_result_cumulative_migrations_list), 2 * (24 * 3600) / period_seconds))
-# ax.set_xticklabels(range(0, 1 + len(ARP_result_cumulative_migrations_list) / ((24 * 3600) / period_seconds), 2))
-#  
-# plt.ylim(0.8, 2.0)
-#      
-# plt.savefig(outpath + plotname + '_cumulative', dpi=300)
-# plt.show()

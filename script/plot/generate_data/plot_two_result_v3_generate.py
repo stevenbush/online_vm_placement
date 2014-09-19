@@ -1,7 +1,4 @@
 import sys, os, glob, csv, string, math
-import numpy as np
-import matplotlib.pyplot as plt
-from math import ceil
 
 if len(sys.argv) < 5:
     print 'No input path, plot name, out path and time period.'
@@ -179,22 +176,22 @@ for inputfile in host_path:
     for i in range(len(ARP_result_host_list)):
         ROBP_result_host_list[i] = ROBP_result_host_list[i] / period_seconds
 
-csvfile = file('result_maxload_list.csv', 'wb')
+csvfile = file('two_result_maxload_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_maxload_list)
 csvfile.close()
 
-csvfile = file('ORA_result_host_list.csv', 'wb')
+csvfile = file('two_ORA_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ORA_result_host_list)
 csvfile.close()
 
-csvfile = file('ARP_result_host_list.csv', 'wb')
+csvfile = file('two_ARP_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ARP_result_host_list)
 csvfile.close()
 
-csvfile = file('ROBP_result_host_list.csv', 'wb')
+csvfile = file('two_ROBP_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ROBP_result_host_list)
 csvfile.close()		
