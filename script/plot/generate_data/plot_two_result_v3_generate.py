@@ -1,19 +1,23 @@
 import sys, os, glob, csv, string, math
 
-if len(sys.argv) < 5:
-    print 'No input path, plot name, out path and time period.'
-    print 'python plot_proportion.py input_path plot_name output_path time_period'
+if len(sys.argv) < 7:
+    print 'No input path, plot name, out path, time period, start day, end day.'
+    print 'python plot_proportion.py input_path plot_name output_path time_period start_day end_day'
     sys.exit()
 
 inputpath = os.path.abspath(sys.argv[1]) + "/"
 plotname = sys.argv[2]
 outpath = os.path.abspath(sys.argv[3]) + "/"
 time_period = sys.argv[4]
+start_day = string.atoi(sys.argv[5])
+end_day = string.atoi(sys.argv[6])
 
 print 'inputpath: ' + inputpath
 print 'plotname: ' + plotname
 print 'outpath: ' + outpath
 print 'timeperiod: ' + time_period
+print 'startday: ' + str(start_day)
+print 'endday: ' + str(end_day)
 
 period_seconds = string.atoi(time_period)
 
@@ -21,10 +25,12 @@ print 'plotting....'
     
 period_seconds = string.atoi(time_period)
 time_unit = 1000000
-start_time = 1987200000000
-end_time = 2332800000000
-# bestfit_result_host_list = []
-# bestfit_raw_host_list = []
+# start_time = 1987200000000
+# end_time = 2332800000000
+start_time = start_day * 24 * 3600 * 1000000
+end_time = end_day * 24 * 3600 * 1000000
+
+
 ORA_result_host_list = []
 ORA_raw_host_list = []
 ARP_result_host_list = []
@@ -176,22 +182,22 @@ for inputfile in host_path:
     for i in range(len(ARP_result_host_list)):
         ROBP_result_host_list[i] = ROBP_result_host_list[i] / period_seconds
 
-csvfile = file('two_result_maxload_list.csv', 'wb')
+csvfile = file(plotname + '_two_result_maxload_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_maxload_list)
 csvfile.close()
 
-csvfile = file('two_ORA_result_host_list.csv', 'wb')
+csvfile = file(plotname + '_two_ORA_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ORA_result_host_list)
 csvfile.close()
 
-csvfile = file('two_ARP_result_host_list.csv', 'wb')
+csvfile = file(plotname + '_two_ARP_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ARP_result_host_list)
 csvfile.close()
 
-csvfile = file('two_ROBP_result_host_list.csv', 'wb')
+csvfile = file(plotname + '_two_ROBP_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ROBP_result_host_list)
 csvfile.close()		

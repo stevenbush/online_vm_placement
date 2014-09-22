@@ -188,22 +188,22 @@ for inputfile in host_path:
     for i in range(len(ARP_result_host_list)):
         ROBP_result_host_list[i] = ROBP_result_host_list[i] / period_seconds
 
-csvfile = file('one_result_cpuload_list.csv', 'wb')
+csvfile = file(plotname + '_one_result_cpuload_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_cpuload_list)
 csvfile.close()
 
-csvfile = file('one_ORA_result_host_list.csv', 'wb')
+csvfile = file(plotname + '_one_ORA_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ORA_result_host_list)
 csvfile.close()
 
-csvfile = file('one_ARP_result_host_list.csv', 'wb')
+csvfile = file(plotname + '_one_ARP_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ARP_result_host_list)
 csvfile.close()
 
-csvfile = file('one_ROBP_result_host_list.csv', 'wb')
+csvfile = file(plotname + '_one_ROBP_result_host_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ROBP_result_host_list)
 csvfile.close()

@@ -100,16 +100,16 @@ for inputfile in host_path:
         result_25_list[index] = result_25_list[index] + raw_25_list[i]
         result_50_list[index] = result_50_list[index] + raw_50_list[i]
         result_75_list[index] = result_75_list[index] + raw_75_list[i]
-#         
-#     for i in range(len(result_0_list)):
-#         if result_0_list[i] > 0:
-#             final_result_0_list[i] = (result_0_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
-#         if result_25_list[i] > 0:
-#             final_result_25_list[i] = (result_25_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
-#         if result_50_list[i] > 0:
-#             final_result_50_list[i] = (result_50_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
-#         if result_75_list[i] > 0:
-#             final_result_75_list[i] = (result_75_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
+         
+    for i in range(len(result_0_list)):
+        if result_0_list[i] > 0:
+            final_result_0_list[i] = (result_0_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
+        if result_25_list[i] > 0:
+            final_result_25_list[i] = (result_25_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
+        if result_50_list[i] > 0:
+            final_result_50_list[i] = (result_50_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
+        if result_75_list[i] > 0:
+            final_result_75_list[i] = (result_75_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
     
 csvfile = file(algorithm_name + '_' + time_period + '_utilization_0_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
@@ -131,25 +131,25 @@ writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_75_list)
 csvfile.close()    
 
-# csvfile = file(algorithm_name + '_' + time_period + 'final_result_0_list.csv', 'wb')
-# writer = csv.writer(csvfile, delimiter="\n")
-# writer.writerow(final_result_0_list)
-# csvfile.close()
-# 
-# csvfile = file(algorithm_name + '_' + time_period + 'final_result_25_list.csv', 'wb')
-# writer = csv.writer(csvfile, delimiter="\n")
-# writer.writerow(final_result_25_list)
-# csvfile.close()
-# 
-# csvfile = file(algorithm_name + '_' + time_period + 'final_result_50_list.csv', 'wb')
-# writer = csv.writer(csvfile, delimiter="\n")
-# writer.writerow(final_result_50_list)
-# csvfile.close()
-# 
-# csvfile = file(algorithm_name + '_' + time_period + 'final_result_75_list.csv', 'wb')
-# writer = csv.writer(csvfile, delimiter="\n")
-# writer.writerow(final_result_75_list)
-# csvfile.close()    
+csvfile = file(algorithm_name + '_' + time_period + 'final_result_0_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(final_result_0_list)
+csvfile.close()
+ 
+csvfile = file(algorithm_name + '_' + time_period + 'final_result_25_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(final_result_25_list)
+csvfile.close()
+ 
+csvfile = file(algorithm_name + '_' + time_period + 'final_result_50_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(final_result_50_list)
+csvfile.close()
+ 
+csvfile = file(algorithm_name + '_' + time_period + 'final_result_75_list.csv', 'wb')
+writer = csv.writer(csvfile, delimiter="\n")
+writer.writerow(final_result_75_list)
+csvfile.close()    
     
 print 'generating finish'
     
