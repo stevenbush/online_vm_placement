@@ -2,27 +2,33 @@
 
 import sys, os, glob, csv, string, math
 
-if len(sys.argv) < 5:
-    print 'No algorithm name, input path, out path and time period.'
-    print 'python plot_proportion.py algorithm_name input_path output_path time_period'
+if len(sys.argv) < 8:
+    print 'No algorithm name, input path, out path, plot name  time period, start day, end day.'
+    print 'python plot_proportion.py algorithm_name input_path output_path plot_name time_period start_day end_day'
     sys.exit()
 
 algorithm_name = sys.argv[1]
 inputpath = os.path.abspath(sys.argv[2]) + "/"
 outpath = os.path.abspath(sys.argv[3]) + "/"
-time_period = sys.argv[4]
+plotname = sys.argv[4]
+time_period = sys.argv[5]
+start_day = string.atoi(sys.argv[6])
+end_day = string.atoi(sys.argv[7])
 
 print 'algorithmname: ' + algorithm_name
 print 'inputpath: ' + inputpath
 print 'outpath: ' + outpath
+print 'plotname:' + plotname 
 print 'timeperiod: ' + time_period
+print 'startday: ' + str(start_day)
+print 'endday: ' + str(end_day)
     
 period_seconds = string.atoi(time_period)
 time_unit = 1000000
-start_time = 1987200000000
-# start_time = 23 * 24 * 3600 * 1000000
-end_time = 2332800000000
-# end_time = 26 * 24 * 3600 * 1000000
+# start_time = 1987200000000
+# end_time = 2332800000000
+start_time = start_day * 24 * 3600 * 1000000
+end_time = end_day * 24 * 3600 * 1000000
 
 print 'generating....'
 
@@ -78,21 +84,22 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi((item.split(':'))[0]) - start_time) // time_unit
-        print 'timestamp: ' + str(timestamp)
-        host_info_list = (item.split(':'))[1].split(',')
-        for info in host_info_list:
-            counter = counter + 1
-            cpu = float((info.split('~'))[0])
-            mem = float((info.split('~'))[1])
-            utilization = (cpu + mem) / 2.0
-            if utilization < 0.65:
-                raw_0_list[timestamp] = raw_0_list[timestamp] + 1
-            elif utilization >= 0.65 and utilization < 0.75:
-                raw_25_list[timestamp] = raw_25_list[timestamp] + 1
-            elif utilization >= 0.75 and utilization < 0.85:
-                raw_50_list[timestamp] = raw_50_list[timestamp] + 1   
-            else:
-                raw_75_list[timestamp] = raw_75_list[timestamp] + 1    
+        if timestamp >= 0 and timestamp < len(raw_0_list):
+            # print 'timestamp: ' + str(timestamp)
+            host_info_list = (item.split(':'))[1].split(',')
+            for info in host_info_list:
+                counter = counter + 1
+                cpu = float((info.split('~'))[0])
+                mem = float((info.split('~'))[1])
+                utilization = (cpu + mem) / 2.0
+                if utilization < 0.65:
+                    raw_0_list[timestamp] = raw_0_list[timestamp] + 1
+                elif utilization >= 0.65 and utilization < 0.75:
+                    raw_25_list[timestamp] = raw_25_list[timestamp] + 1
+                elif utilization >= 0.75 and utilization < 0.85:
+                    raw_50_list[timestamp] = raw_50_list[timestamp] + 1   
+                else:
+                    raw_75_list[timestamp] = raw_75_list[timestamp] + 1    
     print 'loading finish' 
     
     for i in range(len(raw_0_list)):
@@ -112,42 +119,42 @@ for inputfile in host_path:
         if result_75_list[i] > 0:
             final_result_75_list[i] = (result_75_list[i] * 1.0) / (result_0_list[i] + result_25_list[i] + result_50_list[i] + result_75_list[i])
     
-csvfile = file(algorithm_name + '_' + time_period + '_utilization_0_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + '_utilization_0_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_0_list)
 csvfile.close()
 
-csvfile = file(algorithm_name + '_' + time_period + '_utilization_25_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + '_utilization_25_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_25_list)
 csvfile.close()
 
-csvfile = file(algorithm_name + '_' + time_period + '_utilization_50_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + '_utilization_50_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_50_list)
 csvfile.close()
 
-csvfile = file(algorithm_name + '_' + time_period + '_utilization_75_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + '_utilization_75_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(result_75_list)
 csvfile.close()    
 
-csvfile = file(algorithm_name + '_' + time_period + 'final_result_0_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + 'final_result_0_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(final_result_0_list)
 csvfile.close()
  
-csvfile = file(algorithm_name + '_' + time_period + 'final_result_25_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + 'final_result_25_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(final_result_25_list)
 csvfile.close()
  
-csvfile = file(algorithm_name + '_' + time_period + 'final_result_50_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + 'final_result_50_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(final_result_50_list)
 csvfile.close()
  
-csvfile = file(algorithm_name + '_' + time_period + 'final_result_75_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_' + time_period + 'final_result_75_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(final_result_75_list)
 csvfile.close()    

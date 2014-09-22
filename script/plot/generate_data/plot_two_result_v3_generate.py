@@ -84,13 +84,14 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi(item[0]) - start_time) // time_unit
-        host_num = string.atoi(item[3])
-        if ORA_raw_host_list[timestamp] == 0.0:
-            counter = 1
-        else:
-            counter = counter + 1
-        ORA_raw_host_list[timestamp] = (ORA_raw_host_list[timestamp] * (counter - 1) + host_num) * 1.0 / counter  
-        raw_maxload_list[timestamp] = max(string.atof(item[6]), string.atof(item[7]))
+        if timestamp >= 0 and timestamp < len(ARP_raw_host_list):
+            host_num = string.atoi(item[3])
+            if ORA_raw_host_list[timestamp] == 0.0:
+                counter = 1
+            else:
+                counter = counter + 1
+            ORA_raw_host_list[timestamp] = (ORA_raw_host_list[timestamp] * (counter - 1) + host_num) * 1.0 / counter  
+            raw_maxload_list[timestamp] = max(string.atof(item[6]), string.atof(item[7]))
     print 'loading finish'   
     
     previous_value = ORA_raw_host_list[0]
@@ -126,12 +127,13 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi(item[0]) - start_time) // time_unit
-        host_num = string.atoi(item[3])
-        if ARP_raw_host_list[timestamp] == 0.0:
-            counter = 1
-        else:
-            counter = counter + 1
-        ARP_raw_host_list[timestamp] = (ARP_raw_host_list[timestamp] * (counter - 1) + host_num) * 1.0 / counter   
+        if timestamp >= 0 and timestamp < len(ARP_raw_host_list):
+            host_num = string.atoi(item[3])
+            if ARP_raw_host_list[timestamp] == 0.0:
+                counter = 1
+            else:
+                counter = counter + 1
+            ARP_raw_host_list[timestamp] = (ARP_raw_host_list[timestamp] * (counter - 1) + host_num) * 1.0 / counter   
     print 'loading finish'   
     
     previous_value = ARP_raw_host_list[0]
@@ -160,12 +162,13 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi(item[0]) - start_time) // time_unit
-        host_num = string.atoi(item[3])
-        if ROBP_raw_host_list[timestamp] == 0.0:
-            counter = 1
-        else:
-            counter = counter + 1
-        ROBP_raw_host_list[timestamp] = (ROBP_raw_host_list[timestamp] * (counter - 1) + host_num) * 1.0 / counter   
+        if timestamp >= 0 and timestamp < len(ROBP_raw_host_list):
+            host_num = string.atoi(item[3])
+            if ROBP_raw_host_list[timestamp] == 0.0:
+                counter = 1
+            else:
+                counter = counter + 1
+            ROBP_raw_host_list[timestamp] = (ROBP_raw_host_list[timestamp] * (counter - 1) + host_num) * 1.0 / counter   
     print 'loading finish'   
     
     previous_value = ROBP_raw_host_list[0]
