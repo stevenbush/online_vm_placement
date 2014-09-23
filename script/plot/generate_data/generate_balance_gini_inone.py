@@ -46,24 +46,30 @@ def gini2(values):
     
     return giniIdx / 100    
 
-if len(sys.argv) < 4:
-    print 'No algorithm name, input path, out path.'
-    print 'python plot_proportion.py algorithm_name input_path output_path'
+if len(sys.argv) < 7:
+    print 'No algorithm name, input path, out path, plot name, start day, end day.'
+    print 'python plot_proportion.py algorithm_name input_path output_path plot_name start_day end_day'
     sys.exit()
 
 algorithm_name = sys.argv[1]
 inputpath = os.path.abspath(sys.argv[2]) + "/"
 outpath = os.path.abspath(sys.argv[3]) + "/"
+plotname = sys.argv[4]
+start_day = string.atoi(sys.argv[5])
+end_day = string.atoi(sys.argv[6])
 
 print 'algorithmname: ' + algorithm_name
 print 'inputpath: ' + inputpath
 print 'outpath: ' + outpath
+print 'plotname:' + plotname 
+print 'startday: ' + str(start_day)
+print 'endday: ' + str(end_day)
 
 time_unit = 1000000
-start_time = 1987200000000
-# start_time = 23 * 24 * 3600 * 1000000
-end_time = 2332800000000
-# end_time = 26 * 24 * 3600 * 1000000
+# start_time = 1987200000000
+# end_time = 2332800000000
+start_time = start_day * 24 * 3600 * 1000000
+end_time = end_day * 24 * 3600 * 1000000
 
 print 'generating....'
 cpu_gini_result_list = []
@@ -85,38 +91,27 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi((item.split(':'))[0]) - start_time) // time_unit
-        print 'timestamp: ' + str(timestamp)
-        host_info_list = (item.split(':'))[1].split(',')
-        cpu_raw_data = []
-        mem_raw_data = []
-        for info in host_info_list:
-            counter = counter + 1
-            cpu = float((info.split('~'))[0])
-            mem = float((info.split('~'))[1])           
-            cpu_raw_data.append(cpu)            
-            mem_raw_data.append(mem)           
-        print 'cal cpu gini: ' + str(len(cpu_raw_data))
-        cpu_gini = gini2(cpu_raw_data)
-        print 'end cal cpu gini'
-        print 'cal mem gini: ' + str(len(mem_raw_data))
-        mem_gini = gini2(mem_raw_data)
-        print 'cal cpu gini'
-        cpu_gini_result_list.append(cpu_gini)
-        mem_gini_result_list.append(mem_gini)
+        if timestamp >= 0 and timestamp < ((end_time - start_time) // time_unit):
+            print 'timestamp: ' + str(timestamp)
+            host_info_list = (item.split(':'))[1].split(',')
+            cpu_raw_data = []
+            mem_raw_data = []
+            for info in host_info_list:
+                counter = counter + 1
+                cpu = float(info)
+                cpu_raw_data.append(cpu)            
+            # print 'cal cpu gini: ' + str(len(cpu_raw_data))
+            cpu_gini = gini2(cpu_raw_data)
+            # print 'end cal cpu gini'
+            cpu_gini_result_list.append(cpu_gini)
     
     print 'loading finish'
             
 print 'len(cpu_gini_result_list): ' + str(len(cpu_gini_result_list))
-print 'len(mem_gini_result_list): ' + str(len(mem_gini_result_list))
 
-csvfile = file(algorithm_name + '_cpu_gini_result_list.csv', 'wb')
+csvfile = file(algorithm_name + '_' + plotname + '_cpu_gini_result_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(cpu_gini_result_list)
-csvfile.close()
-
-csvfile = file(algorithm_name + '_mem_gini_result_list.csv', 'wb')
-writer = csv.writer(csvfile, delimiter="\n")
-writer.writerow(mem_gini_result_list)
 csvfile.close()
             
             

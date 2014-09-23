@@ -1,19 +1,23 @@
 import sys, os, glob, csv, string
 
-if len(sys.argv) < 5:
-    print 'No input path, plot name, out path and time period.'
-    print 'python plot_proportion.py input_path plot_name output_path time_period'
+if len(sys.argv) < 7:
+    print 'No input path, plot name, out path and time period, start day, end day.'
+    print 'python plot_proportion.py input_path plot_name output_path time_period start_day end_day'
     sys.exit()
 
 inputpath = os.path.abspath(sys.argv[1]) + "/"
 plotname = sys.argv[2]
 outpath = os.path.abspath(sys.argv[3]) + "/"
 time_period = sys.argv[4]
+start_day = string.atoi(sys.argv[5])
+end_day = string.atoi(sys.argv[6])
 
 print 'inputpath: ' + inputpath
 print 'plotname: ' + plotname
 print 'outpath: ' + outpath
 print 'timeperiod: ' + time_period
+print 'startday: ' + str(start_day)
+print 'endday: ' + str(end_day)
 
 period_seconds = string.atoi(time_period)
 
@@ -21,11 +25,11 @@ print 'plotting....'
     
 period_seconds = string.atoi(time_period)
 time_unit = 1000000
-start_time = 1987200000000
-end_time = 2332800000000
-# bestfit_result_average_migrations_list = []
-# bestfit_result_cumulative_migrations_list = []
-# bestfit_counter_list = []
+# start_time = 1987200000000
+# end_time = 2332800000000
+start_time = start_day * 24 * 3600 * 1000000
+end_time = end_day * 24 * 3600 * 1000000
+
 ARP_result_average_migrations_list = []
 ARP_result_cumulative_migrations_list = []
 ARP_counter_list = []
@@ -72,12 +76,13 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi(item[0]) - start_time) // time_unit
-        migrations_num = string.atoi(item[2])
-        if migrations_num > 0:
-            index = timestamp // period_seconds
-            ARP_counter_list[index] = ARP_counter_list[index] + 1.0
-            ARP_result_average_migrations_list[index] = ARP_result_average_migrations_list[index] + migrations_num
-            ARP_result_cumulative_migrations_list[index] = ARP_result_cumulative_migrations_list[index] + migrations_num
+        if timestamp >= 0 and timestamp < ((end_time - start_time) // time_unit):
+            migrations_num = string.atoi(item[2])
+            if migrations_num > 0:
+                index = timestamp // period_seconds
+                ARP_counter_list[index] = ARP_counter_list[index] + 1.0
+                ARP_result_average_migrations_list[index] = ARP_result_average_migrations_list[index] + migrations_num
+                ARP_result_cumulative_migrations_list[index] = ARP_result_cumulative_migrations_list[index] + migrations_num
     print 'loading finish'  
     
     
@@ -102,12 +107,13 @@ for inputfile in host_path:
     counter = 0
     for item in reader:
         timestamp = (string.atoi(item[0]) - start_time) // time_unit
-        migrations_num = string.atoi(item[2])
-        if migrations_num > 0:
-            index = timestamp // period_seconds
-            ROBP_counter_list[index] = ROBP_counter_list[index] + 1.0
-            ROBP_result_average_migrations_list[index] = ROBP_result_average_migrations_list[index] + migrations_num
-            ROBP_result_cumulative_migrations_list[index] = ROBP_result_cumulative_migrations_list[index] + migrations_num
+        if timestamp >= 0 and timestamp < ((end_time - start_time) // time_unit):
+            migrations_num = string.atoi(item[2])
+            if migrations_num > 0:
+                index = timestamp // period_seconds
+                ROBP_counter_list[index] = ROBP_counter_list[index] + 1.0
+                ROBP_result_average_migrations_list[index] = ROBP_result_average_migrations_list[index] + migrations_num
+                ROBP_result_cumulative_migrations_list[index] = ROBP_result_cumulative_migrations_list[index] + migrations_num
     print 'loading finish'  
     
     
@@ -120,11 +126,11 @@ for inputfile in host_path:
         ROBP_result_cumulative_migrations_list[i] = ROBP_result_cumulative_migrations_list[i] + previous_value  
         previous_value = ROBP_result_cumulative_migrations_list[i] 
 
-csvfile = file('one_ARP_result_average_migrations_list.csv', 'wb')
+csvfile = file(plotname + '_one_ARP_result_average_migrations_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ARP_result_average_migrations_list)csvfile.close()
 
-csvfile = file('one_ROBP_result_average_migrations_list.csv', 'wb')
+csvfile = file(plotname + '_one_ROBP_result_average_migrations_list.csv', 'wb')
 writer = csv.writer(csvfile, delimiter="\n")
 writer.writerow(ROBP_result_average_migrations_list)
 csvfile.close()

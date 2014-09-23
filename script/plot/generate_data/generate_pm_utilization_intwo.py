@@ -92,11 +92,11 @@ for inputfile in host_path:
                 cpu = float((info.split('~'))[0])
                 mem = float((info.split('~'))[1])
                 utilization = (cpu + mem) / 2.0
-                if utilization < 0.65:
+                if utilization < 0.7:
                     raw_0_list[timestamp] = raw_0_list[timestamp] + 1
-                elif utilization >= 0.65 and utilization < 0.75:
+                elif utilization >= 0.7 and utilization < 0.8:
                     raw_25_list[timestamp] = raw_25_list[timestamp] + 1
-                elif utilization >= 0.75 and utilization < 0.85:
+                elif utilization >= 0.8 and utilization < 0.9:
                     raw_50_list[timestamp] = raw_50_list[timestamp] + 1   
                 else:
                     raw_75_list[timestamp] = raw_75_list[timestamp] + 1    
