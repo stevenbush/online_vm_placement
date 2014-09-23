@@ -33,7 +33,8 @@ public class generate_worst_events {
 
 		UniformRealDistribution tiny_seed_distribution = new UniformRealDistribution(0, 0.25);
 		UniformRealDistribution normal_seed_distribution = new UniformRealDistribution(0.25, 1.0);
-		// UniformRealDistribution big_seed_distribution = new UniformRealDistribution(0.75, 1.0);
+		// UniformRealDistribution big_seed_distribution = new
+		// UniformRealDistribution(0.75, 1.0);
 
 		Double seed_value = 0.0;
 
@@ -68,7 +69,7 @@ public class generate_worst_events {
 							Double MEM = seed_value * scalling_distribution.sample();
 							item_line[6] = String.valueOf(CPU);
 							item_line[7] = String.valueOf(MEM);
-							tiny_size = tiny_size + CPU;
+							tiny_size = tiny_size + Math.max(CPU, MEM);
 						} else {
 							seed_value = normal_seed_distribution.sample();
 							Double upper_bound = Math.min(1 / seed_value, 2);

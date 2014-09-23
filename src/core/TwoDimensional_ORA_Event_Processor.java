@@ -22,9 +22,9 @@ import org.apache.commons.math3.analysis.function.Max;
 public class TwoDimensional_ORA_Event_Processor extends Abstract_Event_Processor {
 
 	/** the hash table used to store the vms */
-	private Hashtable<String, VM> vm_table;
+	public Hashtable<String, VM> vm_table;
 	/** the list used to store the host */
-	private ArrayList<ORA_Host> host_list;
+	public ArrayList<ORA_Host> host_list;
 	/** the overload threshold */
 	private Double overload_threshold;
 	/** the underload threshold */

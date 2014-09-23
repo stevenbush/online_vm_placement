@@ -17,18 +17,19 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 
-public class TwoDimensional_ROBP_Event_Processor extends
-		Abstract_Event_Processor {
+public class TwoDimensional_ROBP_Event_Processor extends Abstract_Event_Processor {
 	/** the hash table used to store the vms */
-	private Hashtable<String, VM> vm_table;
+	public Hashtable<String, VM> vm_table;
 	/** the list used to store the host */
-	private ArrayList<ROBP_Host> host_list;
+	public ArrayList<ROBP_Host> host_list;
 	/** the overload threshold */
 	private Double overload_threshold;
 	/** the underload threshold */
 	private Double underload_threshold;
 	/** a file writer used to write log */
 	private BufferedWriter log_writer;
+	/** a file writer used to write hostlog */
+	private BufferedWriter host_log_writer;
 	/** the number of migrations */
 	private Integer migration_num;
 	/** the total number of vms */
@@ -61,13 +62,16 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	private Double total_cpu_workload_size;
 	/** the total mem workload size */
 	private Double total_mem_workload_size;
+	/** the time to record the pre time */
+	private long pre_time;
 
-	public TwoDimensional_ROBP_Event_Processor(BufferedWriter writer) {
+	public TwoDimensional_ROBP_Event_Processor(BufferedWriter writer, BufferedWriter hostwriter) {
 		this.overload_threshold = 1.0;
 		this.underload_threshold = 3.0 / 4.0;
 		this.vm_table = new Hashtable<>();
 		this.host_list = new ArrayList<ROBP_Host>();
 		this.log_writer = writer;
+		this.host_log_writer = hostwriter;
 		this.migration_num = 0;
 		this.total_vm_num = (long) 0;
 		this.BOne_Bin_list = new LinkedList<>();
@@ -84,6 +88,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 		this.Bin_canbe_filled_M_list = new LinkedList<>();
 		this.total_cpu_workload_size = 0.0;
 		this.total_mem_workload_size = 0.0;
+		this.pre_time = 0;
 	}
 
 	/**
@@ -180,13 +185,11 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			}
 		}
 
-		if (S_num == 1 && H_num == 0 && B_num == 0 && L_num == 0 && T_num == 0
-				&& M_num == 0) {
+		if (S_num == 1 && H_num == 0 && B_num == 0 && L_num == 0 && T_num == 0 && M_num == 0) {
 			this.US_Bin_list.add(host);
 		}
 
-		if (T_num > 0 && H_num == 0 && B_num == 0 && L_num == 0 && S_num == 0
-				&& M_num == 0) {
+		if (T_num > 0 && H_num == 0 && B_num == 0 && L_num == 0 && S_num == 0 && M_num == 0) {
 			this.TO_Bin_list.add(host);
 			if (T_num <= 2) {
 				this.UT_Bin_list.add(host);
@@ -198,8 +201,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 
 		}
 
-		if (M_num > 0 && H_num == 0 && B_num == 0 && L_num == 0 && S_num == 0
-				&& T_num == 0) {
+		if (M_num > 0 && H_num == 0 && B_num == 0 && L_num == 0 && S_num == 0 && T_num == 0) {
 			this.MO_Bin_list.add(host);
 			if (host.getCpu_utilization() <= 3.0 / 4.0) {
 				this.UM_Bin_list.add(host);
@@ -219,11 +221,9 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @param des_host
 	 * @throws Exception
 	 */
-	private void move_group(ROBP_Host src_host, ROBP_Host des_host)
-			throws Exception {
-		System.out.println("move_group");
-		ArrayList<String> candidate_group = src_host.get_group_intwo(vm_table)
-				.get(0);
+	private void move_group(ROBP_Host src_host, ROBP_Host des_host) throws Exception {
+		// System.out.println("move_group");
+		ArrayList<String> candidate_group = src_host.get_group_intwo(vm_table).get(0);
 		for (String vm_id : candidate_group) {
 			VM current_vm = vm_table.get(vm_id);
 			src_host.delete_vm(current_vm);
@@ -238,25 +238,22 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * this method is used to fill a L-bin or B-bin, before using this method,
-	 * you should use clear_bin_type method, after using this method you should
-	 * use update_bin_type method
+	 * this method is used to fill a L-bin or B-bin, before using this method, you should use clear_bin_type method,
+	 * after using this method you should use update_bin_type method
 	 * 
 	 * @param host
 	 * @throws Exception
 	 */
 	private void fill(ROBP_Host host) throws Exception {
-		System.out.println("fill");
-		while ((host.getMax_uitilization() <= 3.0 / 4.0)
-				&& ((!TO_Bin_list.isEmpty()) || (!MO_Bin_list.isEmpty()))) {
+		// System.out.println("fill");
+		while ((host.getMax_uitilization() <= 3.0 / 4.0) && ((!TO_Bin_list.isEmpty()) || (!MO_Bin_list.isEmpty()))) {
 			Boolean find_T_item = false;
 			VM T_item = null;
 			ROBP_Host src_host = null;
 			for (ROBP_Host T_host : TO_Bin_list) {
 				for (String vm_id : T_host.getVm_list()) {
 					VM current_vm = vm_table.get(vm_id);
-					if (Math.max(current_vm.getCpu_demand(),
-							current_vm.getMem_demand()) <= (1 - host
+					if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= (1 - host
 							.getMax_uitilization())) {
 						find_T_item = true;
 						T_item = current_vm;
@@ -272,8 +269,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			if (find_T_item) {
 				src_host.delete_vm(T_item);
 				host.add_vm(T_item);
-				if (!src_host.getVm_list().isEmpty() && !UT_Bin_list.isEmpty()
-						&& !UT_Bin_list.contains(src_host)) {
+				if (!src_host.getVm_list().isEmpty() && !UT_Bin_list.isEmpty() && !UT_Bin_list.contains(src_host)) {
 					ROBP_Host UT_Bin = UT_Bin_list.getFirst();
 					for (String vm_id : UT_Bin.getVm_list()) {
 						VM current_vm = vm_table.get(vm_id);
@@ -312,22 +308,20 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * This operation is used to merge two UM-bins or merge a S*-bin and a
-	 * S’-bin, ensuring that at most one of them remains unfilled.
+	 * This operation is used to merge two UM-bins or merge a S*-bin and a S’-bin, ensuring that at most one of them
+	 * remains unfilled.
 	 * 
 	 * @param host1
 	 * @param host2
 	 * @throws Exception
 	 */
 	private void merge(ROBP_Host host1, ROBP_Host host2) throws Exception {
-		System.out.println("merge");
+		// System.out.println("merge");
 		// if B1 and B2 are UM-bin
-		if (host1.getM_num_intwo() > 0 && host1.getH_num_intwo() == 0
-				&& host1.getB_num_intwo() == 0 && host1.getL_num_intwo() == 0
-				&& host1.getS_num_intwo() == 0 && host1.getT_num_intwo() == 0
-				&& host1.getMax_uitilization() <= 3.0 / 4.0
-				&& host2.getM_num_intwo() > 0 && host2.getH_num_intwo() == 0
-				&& host2.getB_num_intwo() == 0 && host2.getL_num_intwo() == 0
+		if (host1.getM_num_intwo() > 0 && host1.getH_num_intwo() == 0 && host1.getB_num_intwo() == 0
+				&& host1.getL_num_intwo() == 0 && host1.getS_num_intwo() == 0 && host1.getT_num_intwo() == 0
+				&& host1.getMax_uitilization() <= 3.0 / 4.0 && host2.getM_num_intwo() > 0
+				&& host2.getH_num_intwo() == 0 && host2.getB_num_intwo() == 0 && host2.getL_num_intwo() == 0
 				&& host2.getS_num_intwo() == 0 && host2.getT_num_intwo() == 0
 				&& host2.getMax_uitilization() <= 3.0 / 4.0) {
 			ROBP_Host max_host;
@@ -339,31 +333,21 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				min_host = host2;
 				max_host = host1;
 			}
-			while (min_host.getMax_uitilization() > 0
-					&& max_host.getMax_uitilization() <= this.underload_threshold) {
+			while (min_host.getMax_uitilization() > 0 && max_host.getMax_uitilization() <= this.underload_threshold) {
 				this.move_group(min_host, max_host);
 				this.migration_num = this.migration_num + 1;
 			}
 		}
 
 		// if B1 and B2 are US-bin then
-		if (host1.getS_num_intwo() > 0
-				&& host1.getMax_uitilization() <= 3.0 / 4.0
-				&& host2.getS_num_intwo() > 0
+		if (host1.getS_num_intwo() > 0 && host1.getMax_uitilization() <= 3.0 / 4.0 && host2.getS_num_intwo() > 0
 				&& host2.getMax_uitilization() <= 3.0 / 4.0) {
 			ROBP_Host SO_Bin = null;
 			ROBP_Host S_Bin = null;
-			if (host1.getS_num_intwo() > 0 && host1.getH_num_intwo() == 0
-					&& host1.getB_num_intwo() == 0
-					&& host1.getL_num_intwo() == 0
-					&& host1.getT_num_intwo() == 0
-					&& host1.getM_num_intwo() == 0
-					&& host2.getS_num_intwo() > 0
-					&& host2.getH_num_intwo() == 0
-					&& host2.getB_num_intwo() == 0
-					&& host2.getL_num_intwo() == 0
-					&& host2.getT_num_intwo() == 0
-					&& host2.getM_num_intwo() == 0) {
+			if (host1.getS_num_intwo() > 0 && host1.getH_num_intwo() == 0 && host1.getB_num_intwo() == 0
+					&& host1.getL_num_intwo() == 0 && host1.getT_num_intwo() == 0 && host1.getM_num_intwo() == 0
+					&& host2.getS_num_intwo() > 0 && host2.getH_num_intwo() == 0 && host2.getB_num_intwo() == 0
+					&& host2.getL_num_intwo() == 0 && host2.getT_num_intwo() == 0 && host2.getM_num_intwo() == 0) {
 				// if both host1 and host2 only have on S-item then
 				VM S_item = vm_table.get(host1.getVm_list().get(0));
 				host1.delete_vm(S_item);
@@ -371,11 +355,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				this.migration_num = this.migration_num + 1;
 				this.fill(host2);
 			} else {
-				if (host1.getS_num_intwo() > 0 && host1.getH_num_intwo() == 0
-						&& host1.getB_num_intwo() == 0
-						&& host1.getL_num_intwo() == 0
-						&& host1.getT_num_intwo() == 0
-						&& host1.getM_num_intwo() == 0) {
+				if (host1.getS_num_intwo() > 0 && host1.getH_num_intwo() == 0 && host1.getB_num_intwo() == 0
+						&& host1.getL_num_intwo() == 0 && host1.getT_num_intwo() == 0 && host1.getM_num_intwo() == 0) {
 					// if host1 only have on S-item then
 					SO_Bin = host1;
 					S_Bin = host2;
@@ -391,10 +372,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					VM T_item = null;
 					for (String iterable_vm_id : S_Bin.getVm_list()) {
 						VM current_item = vm_table.get(iterable_vm_id);
-						if (Math.max(current_item.getCpu_demand(),
-								current_item.getMem_demand()) <= 1.0 / 3.0
-								&& Math.max(current_item.getCpu_demand(),
-										current_item.getMem_demand()) > 1.0 / 4.0) {
+						if (Math.max(current_item.getCpu_demand(), current_item.getMem_demand()) <= 1.0 / 3.0
+								&& Math.max(current_item.getCpu_demand(), current_item.getMem_demand()) > 1.0 / 4.0) {
 							T_item = current_item;
 							break;
 						}
@@ -402,12 +381,10 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					Boolean find_bin = false;
 					ROBP_Host candidate_host = null;
 					for (ROBP_Host iterable_host : this.host_list) {
-						if ((Math.max(T_item.getCpu_demand(),
-								T_item.getMem_demand()) <= 1 - iterable_host
+						if ((Math.max(T_item.getCpu_demand(), T_item.getMem_demand()) <= 1 - iterable_host
 								.getMax_uitilization())
 								&& !this.MO_Bin_list.contains(iterable_host)
-								&& iterable_host != S_Bin
-								&& iterable_host != SO_Bin) {
+								&& iterable_host != S_Bin && iterable_host != SO_Bin) {
 							candidate_host = iterable_host;
 							find_bin = true;
 							break;
@@ -435,15 +412,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					this.fill(S_Bin);
 
 				} else {
-					while (S_Bin.getMax_uitilization()
-							+ SO_Bin.getMax_uitilization() > 1.0) {
+					while (S_Bin.getMax_uitilization() + SO_Bin.getMax_uitilization() > 1.0) {
 						Boolean find_host = false;
 						ROBP_Host candidate_host = null;
 						for (ROBP_Host iterable_host : this.host_list) {
 							if ((iterable_host.getMax_uitilization() < 3.0 / 4.0)
-									&& !this.TO_Bin_list
-											.contains(iterable_host)
-									&& iterable_host != S_Bin
+									&& !this.TO_Bin_list.contains(iterable_host) && iterable_host != S_Bin
 									&& iterable_host != SO_Bin) {
 								candidate_host = iterable_host;
 								find_host = true;
@@ -474,16 +448,15 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * This operation moves all the T-items and M-groups from the gap of a
-	 * current host and distributes them among all the other hosts.
+	 * This operation moves all the T-items and M-groups from the gap of a current host and distributes them among all
+	 * the other hosts.
 	 * 
 	 * @param host
 	 * @throws Exception
 	 */
 	private void movethegap(ROBP_Host host) throws Exception {
-		System.out.println("movethegap");
-		ArrayList<String> vm_id_list = (ArrayList<String>) host.getVm_list()
-				.clone();
+		// System.out.println("movethegap");
+		ArrayList<String> vm_id_list = (ArrayList<String>) host.getVm_list().clone();
 
 		// move out the M-groups
 		ArrayList<ArrayList<String>> groups = host.get_group_intwo(vm_table);
@@ -492,14 +465,11 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				Double group_size = 0.0;
 				for (String vm_id : group) {
 					VM current_vm = vm_table.get(vm_id);
-					group_size = group_size
-							+ Math.max(current_vm.getCpu_demand(),
-									current_vm.getMem_demand());
+					group_size = group_size + Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand());
 				}
 				Boolean find_host = false;
 				for (ROBP_Host iterable_host : this.Bin_canbe_filled_M_list) {
-					if (((1.0 - iterable_host.getMax_uitilization()) >= group_size)
-							&& iterable_host != host) {
+					if (((1.0 - iterable_host.getMax_uitilization()) >= group_size) && iterable_host != host) {
 						move_group(host, iterable_host);
 						this.update_bin_type(iterable_host);
 						this.migration_num = this.migration_num + 1;
@@ -521,13 +491,11 @@ public class TwoDimensional_ROBP_Event_Processor extends
 		for (String vm_id : vm_id_list) {
 			VM current_vm = vm_table.get(vm_id);
 			if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 3.0
-					&& Math.max(current_vm.getCpu_demand(),
-							current_vm.getMem_demand()) > 1.0 / 4.0) { // T-item
+					&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 4.0) { // T-item
 				Boolean find_host = false;
 				for (ROBP_Host iterable_host : this.Bin_canbe_filled_T_list) {
-					if (((1.0 - iterable_host.getMax_uitilization()) >= Math
-							.max(current_vm.getCpu_demand(),
-									current_vm.getMem_demand()))
+					if (((1.0 - iterable_host.getMax_uitilization()) >= Math.max(current_vm.getCpu_demand(),
+							current_vm.getMem_demand()))
 							&& iterable_host != host) {
 						host.delete_vm(current_vm);
 						iterable_host.add_vm(current_vm);
@@ -550,20 +518,18 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * This operation fills a B-bin A with complementary L-item. If we find one
-	 * of this kind of L-item then return true, otherwise return fales. Before
-	 * using this method you should clear the host's type
+	 * This operation fills a B-bin A with complementary L-item. If we find one of this kind of L-item then return true,
+	 * otherwise return fales. Before using this method you should clear the host's type
 	 * 
 	 * @param host
 	 * @return
 	 * @throws Exception
 	 */
 	private Boolean fillwithcomp(ROBP_Host host) throws Exception {
-		System.out.println("fillwithcomp");
+		// System.out.println("fillwithcomp");
 		Boolean find_L_item = false;
-		if (host.getB_num_intwo() == 1 && host.getH_num_intwo() == 0
-				&& host.getL_num_intwo() == 0 && host.getS_num_intwo() == 0
-				&& host.getT_num_intwo() == 0 && host.getM_num_intwo() == 0) {
+		if (host.getB_num_intwo() == 1 && host.getH_num_intwo() == 0 && host.getL_num_intwo() == 0
+				&& host.getS_num_intwo() == 0 && host.getT_num_intwo() == 0 && host.getM_num_intwo() == 0) {
 			VM current_B_item = vm_table.get(host.getVm_list().get(0));
 			VM candidate_L_item = null;
 			if (!LOne_Bin_list.isEmpty()) { // if there exists a L-bin
@@ -572,16 +538,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					for (String iterable_id : iterable_host.getVm_list()) {
 						VM current_vm = vm_table.get(iterable_id);
 						// this is a L-item
-						if (Math.max(current_vm.getCpu_demand(),
-								current_vm.getMem_demand()) <= 2.0 / 3.0
-								&& Math.max(current_vm.getCpu_demand(),
-										current_vm.getMem_demand()) > 1.0 / 2.0) {
+						if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 2.0 / 3.0
+								&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 2.0) {
 							// if this L-item has a complementary relationship
 							// with this B-item
-							if (current_B_item.getCpu_demand()
-									+ current_vm.getCpu_demand() <= 1.0
-									&& current_B_item.getMem_demand()
-											+ current_vm.getMem_demand() <= 1.0) {
+							if (current_B_item.getCpu_demand() + current_vm.getCpu_demand() <= 1.0
+									&& current_B_item.getMem_demand() + current_vm.getMem_demand() <= 1.0) {
 								candidate_L_item = current_vm;
 								find_L_item = true;
 								break;
@@ -594,8 +556,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				}
 
 				if (find_L_item) {
-					ROBP_Host candidate_L_host = (ROBP_Host) candidate_L_item
-							.getDeployed_host();
+					ROBP_Host candidate_L_host = (ROBP_Host) candidate_L_item.getDeployed_host();
 					// if this L_bin contains S-item
 					if (candidate_L_host.getS_num_intwo() > 0) {
 						// this.movethegap(candidate_L_host);
@@ -603,10 +564,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 						// find out this S-item
 						for (String iterable_id : candidate_L_host.getVm_list()) {
 							VM current_vm = vm_table.get(iterable_id);
-							if (Math.max(current_vm.getCpu_demand(),
-									current_vm.getMem_demand()) <= 1.0 / 2.0
-									&& Math.max(current_vm.getCpu_demand(),
-											current_vm.getMem_demand()) > 1.0 / 3.0) {
+							if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0
+									&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 3.0) {
 								curren_S_item = current_vm;
 								break;
 							}
@@ -618,34 +577,18 @@ public class TwoDimensional_ROBP_Event_Processor extends
 						if (!LOne_withoutS_Bin_list.isEmpty()) {
 							for (ROBP_Host iterable_host : LOne_withoutS_Bin_list) {
 								if (iterable_host != candidate_L_host) {
-									for (String iterable_id : iterable_host
-											.getVm_list()) {
-										VM current_vm = vm_table
-												.get(iterable_id);
+									for (String iterable_id : iterable_host.getVm_list()) {
+										VM current_vm = vm_table.get(iterable_id);
 										// this is a L-item
-										if (Math.max(
-												current_vm.getCpu_demand(),
-												current_vm.getMem_demand()) <= 2.0 / 3.0
-												&& Math.max(
-														current_vm
-																.getCpu_demand(),
-														current_vm
-																.getMem_demand()) > 1.0 / 2.0) {
+										if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 2.0 / 3.0
+												&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 2.0) {
 											// if this S-item a complementary
 											// relationship with this L-item
-											if (Math.max(curren_S_item
-													.getCpu_demand(),
-													curren_S_item
-															.getMem_demand())
-													+ current_vm
-															.getCpu_demand() <= 1.0
-													&& Math.max(
-															curren_S_item
-																	.getCpu_demand(),
-															curren_S_item
-																	.getMem_demand())
-															+ current_vm
-																	.getMem_demand() <= 1.0) {
+											if (Math.max(curren_S_item.getCpu_demand(), curren_S_item.getMem_demand())
+													+ current_vm.getCpu_demand() <= 1.0
+													&& Math.max(curren_S_item.getCpu_demand(),
+															curren_S_item.getMem_demand())
+															+ current_vm.getMem_demand() <= 1.0) {
 												find_L_bin = true;
 												break;
 											}
@@ -654,16 +597,11 @@ public class TwoDimensional_ROBP_Event_Processor extends
 
 									if (find_L_bin) {
 										if (iterable_host.getMax_uitilization()
-												+ Math.max(
-														curren_S_item
-																.getCpu_demand(),
-														curren_S_item
-																.getMem_demand()) > 1.0) {
+												+ Math.max(curren_S_item.getCpu_demand(), curren_S_item.getMem_demand()) > 1.0) {
 											movethegap(iterable_host);
 										}
 
-										candidate_L_host
-												.delete_vm(curren_S_item);
+										candidate_L_host.delete_vm(curren_S_item);
 										iterable_host.add_vm(curren_S_item);
 										this.migration_num = this.migration_num + 1;
 										this.update_bin_type(iterable_host);
@@ -678,8 +616,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 							// S-item and there exists a S-bin with only
 							// one S-item, than move this current_S_item to this
 							// S-bin
-							if (!US_Bin_list.isEmpty()
-									&& !US_Bin_list.contains(candidate_L_host)) {
+							if (!US_Bin_list.isEmpty() && !US_Bin_list.contains(candidate_L_host)) {
 								ROBP_Host US_Bin = US_Bin_list.getFirst();
 								candidate_L_host.delete_vm(curren_S_item);
 								US_Bin.add_vm(curren_S_item);
@@ -705,15 +642,15 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * this method put a L-item into a B-bin or L-bin which can accommodate this
-	 * L-item, if this operation succeed return true, otherwise return false.
+	 * this method put a L-item into a B-bin or L-bin which can accommodate this L-item, if this operation succeed
+	 * return true, otherwise return false.
 	 * 
 	 * @param L_item
 	 * @return
 	 * @throws Exception
 	 */
 	private Boolean putwithcomp(VM L_item) throws Exception {
-		System.out.println("putwithcomp");
+		// System.out.println("putwithcomp");
 		Boolean find_candidate_bin = false;
 		// find if there are some B-bin can accommodate this L-item
 		if (!BOne_Bin_list.isEmpty()) { // if there exists a B-bin containing at
@@ -724,16 +661,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				for (String iterable_id : iterable_host.getVm_list()) {
 					VM current_B_item = vm_table.get(iterable_id);
 					// this is a B-item
-					if (Math.max(current_B_item.getCpu_demand(),
-							current_B_item.getMem_demand()) <= 3.0 / 4.0
-							&& Math.max(current_B_item.getCpu_demand(),
-									current_B_item.getMem_demand()) > 2.0 / 3.0) {
+					if (Math.max(current_B_item.getCpu_demand(), current_B_item.getMem_demand()) <= 3.0 / 4.0
+							&& Math.max(current_B_item.getCpu_demand(), current_B_item.getMem_demand()) > 2.0 / 3.0) {
 						// if this B-item has a complementary relationship with
 						// this L-item
-						if (current_B_item.getCpu_demand()
-								+ L_item.getCpu_demand() <= 1.0
-								&& current_B_item.getMem_demand()
-										+ L_item.getMem_demand() <= 1.0) {
+						if (current_B_item.getCpu_demand() + L_item.getCpu_demand() <= 1.0
+								&& current_B_item.getMem_demand() + L_item.getMem_demand() <= 1.0) {
 							candidate_B_bin = iterable_host;
 							find_candidate_bin = true;
 							break;
@@ -746,11 +679,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			}
 
 			if (find_candidate_bin) {
-				if (Math.max(
-						L_item.getCpu_demand()
-								+ candidate_B_bin.getCpu_utilization_intwo(),
-						L_item.getMem_demand()
-								+ candidate_B_bin.getMem_utilization_intwo()) > 1.0) {
+				if (Math.max(L_item.getCpu_demand() + candidate_B_bin.getCpu_utilization_intwo(),
+						L_item.getMem_demand() + candidate_B_bin.getMem_utilization_intwo()) > 1.0) {
 					this.movethegap(candidate_B_bin);
 				}
 				candidate_B_bin.add_vm(L_item);
@@ -769,16 +699,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				for (String iterable_id : iterable_host.getVm_list()) {
 					VM current_L_item = vm_table.get(iterable_id);
 					// this is a L-item
-					if (Math.max(current_L_item.getCpu_demand(),
-							current_L_item.getMem_demand()) <= 2.0 / 3.0
-							&& Math.max(current_L_item.getCpu_demand(),
-									current_L_item.getMem_demand()) > 1.0 / 2.0) {
+					if (Math.max(current_L_item.getCpu_demand(), current_L_item.getMem_demand()) <= 2.0 / 3.0
+							&& Math.max(current_L_item.getCpu_demand(), current_L_item.getMem_demand()) > 1.0 / 2.0) {
 						// if this L-item has a complementary relationship with
 						// this B-item
-						if (current_L_item.getCpu_demand()
-								+ L_item.getCpu_demand() <= 1.0
-								&& current_L_item.getMem_demand()
-										+ L_item.getMem_demand() <= 1.0) {
+						if (current_L_item.getCpu_demand() + L_item.getCpu_demand() <= 1.0
+								&& current_L_item.getMem_demand() + L_item.getMem_demand() <= 1.0) {
 							candidate_L_bin = iterable_host;
 							find_candidate_bin = true;
 							break;
@@ -795,21 +721,16 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				// L-item's size, we have to move out some
 				// items from this candidate L-bin then add this L-item into
 				// this L-bin
-				if (Math.max(
-						L_item.getCpu_demand()
-								+ candidate_L_bin.getCpu_utilization_intwo(),
-						L_item.getMem_demand()
-								+ candidate_L_bin.getMem_utilization_intwo()) > 1.0) {
+				if (Math.max(L_item.getCpu_demand() + candidate_L_bin.getCpu_utilization_intwo(),
+						L_item.getMem_demand() + candidate_L_bin.getMem_utilization_intwo()) > 1.0) {
 					if (candidate_L_bin.getS_num_intwo() > 0) {
 						this.movethegap(candidate_L_bin);
 						VM curren_S_item = null;
 						// find out this S-item
 						for (String iterable_id : candidate_L_bin.getVm_list()) {
 							VM current_vm = vm_table.get(iterable_id);
-							if (Math.max(current_vm.getCpu_demand(),
-									current_vm.getMem_demand()) <= 1.0 / 2.0
-									&& Math.max(current_vm.getCpu_demand(),
-											current_vm.getMem_demand()) > 1.0 / 3.0) {
+							if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0
+									&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 3.0) {
 								curren_S_item = current_vm;
 								break;
 							}
@@ -821,34 +742,18 @@ public class TwoDimensional_ROBP_Event_Processor extends
 						if (!LOne_withoutS_Bin_list.isEmpty()) {
 							for (ROBP_Host iterable_host : LOne_withoutS_Bin_list) {
 								if (iterable_host != candidate_L_bin) {
-									for (String iterable_id : iterable_host
-											.getVm_list()) {
-										VM current_vm = vm_table
-												.get(iterable_id);
+									for (String iterable_id : iterable_host.getVm_list()) {
+										VM current_vm = vm_table.get(iterable_id);
 										// this is a L-item
-										if (Math.max(
-												current_vm.getCpu_demand(),
-												current_vm.getMem_demand()) <= 2.0 / 3.0
-												&& Math.max(
-														current_vm
-																.getCpu_demand(),
-														current_vm
-																.getMem_demand()) > 1.0 / 2.0) {
+										if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 2.0 / 3.0
+												&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 2.0) {
 											// if this S-item a complementary
 											// relationship with this L-item
-											if (Math.max(curren_S_item
-													.getCpu_demand(),
-													curren_S_item
-															.getMem_demand())
-													+ current_vm
-															.getCpu_demand() <= 1.0
-													&& Math.max(
-															curren_S_item
-																	.getCpu_demand(),
-															curren_S_item
-																	.getMem_demand())
-															+ current_vm
-																	.getMem_demand() <= 1.0) {
+											if (Math.max(curren_S_item.getCpu_demand(), curren_S_item.getMem_demand())
+													+ current_vm.getCpu_demand() <= 1.0
+													&& Math.max(curren_S_item.getCpu_demand(),
+															curren_S_item.getMem_demand())
+															+ current_vm.getMem_demand() <= 1.0) {
 												find_L_bin = true;
 												break;
 											}
@@ -857,15 +762,10 @@ public class TwoDimensional_ROBP_Event_Processor extends
 
 									if (find_L_bin) {
 										if (iterable_host.getMax_uitilization()
-												+ Math.max(
-														curren_S_item
-																.getCpu_demand(),
-														curren_S_item
-																.getMem_demand()) > 1.0) {
+												+ Math.max(curren_S_item.getCpu_demand(), curren_S_item.getMem_demand()) > 1.0) {
 											movethegap(iterable_host);
 										}
-										candidate_L_bin
-												.delete_vm(curren_S_item);
+										candidate_L_bin.delete_vm(curren_S_item);
 										iterable_host.add_vm(curren_S_item);
 										this.migration_num = this.migration_num + 1;
 										this.update_bin_type(iterable_host);
@@ -906,14 +806,13 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * This operation insert an item into a suitable bin. This operation
-	 * corresponds insert a VM into a existing PM.
+	 * This operation insert an item into a suitable bin. This operation corresponds insert a VM into a existing PM.
 	 * 
 	 * @param vm
 	 * @throws Exception
 	 */
 	private void insert(VM vm) throws Exception {
-		System.out.println("insert");
+		// System.out.println("insert");
 		if (Math.max(vm.getCpu_demand(), vm.getMem_demand()) <= 1.0
 				&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 3.0 / 4.0) { // H-item
 			ROBP_Host new_host = new ROBP_Host();
@@ -946,18 +845,14 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					for (ROBP_Host iterable_host : STM_Bin_list) {
 						for (String vm_id : iterable_host.getVm_list()) {
 							VM current_vm = vm_table.get(vm_id);
-							if (Math.max(current_vm.getCpu_demand(),
-									current_vm.getMem_demand()) <= (1 - new_host
+							if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= (1 - new_host
 									.getMax_uitilization())
-									&& Math.max(current_vm.getCpu_demand(),
-											current_vm.getMem_demand()) <= 1.0 / 2.0
-									&& Math.max(current_vm.getCpu_demand(),
-											current_vm.getMem_demand()) > 1.0 / 3.0) {
+									&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0
+									&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 3.0) {
 								iterable_host.delete_vm(current_vm);
 								new_host.add_vm(current_vm);
 								this.migration_num = this.migration_num + 1;
-								if (iterable_host.getS_num_intwo() > 0
-										&& !US_Bin_list.isEmpty()
+								if (iterable_host.getS_num_intwo() > 0 && !US_Bin_list.isEmpty()
 										&& !US_Bin_list.contains(iterable_host)) {
 									ROBP_Host US_Bin = US_Bin_list.getFirst();
 									this.merge(iterable_host, US_Bin);
@@ -1004,18 +899,13 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					if (iterable_host.getS_num_intwo() == 0) {
 						for (String vm_id : iterable_host.getVm_list()) {
 							VM current_vm = vm_table.get(vm_id);
-							if (current_vm.getCpu_demand() <= (1 - Math.max(
-									vm.getCpu_demand(), vm.getMem_demand()))
-									&& current_vm.getMem_demand() <= (1 - Math
-											.max(vm.getCpu_demand(),
-													vm.getMem_demand()))
-									&& Math.max(current_vm.getCpu_demand(),
-											current_vm.getMem_demand()) <= 2.0 / 3.0
-									&& Math.max(current_vm.getCpu_demand(),
-											current_vm.getMem_demand()) > 1.0 / 2.0) {
+							if (current_vm.getCpu_demand() <= (1 - Math.max(vm.getCpu_demand(), vm.getMem_demand()))
+									&& current_vm.getMem_demand() <= (1 - Math.max(vm.getCpu_demand(),
+											vm.getMem_demand()))
+									&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 2.0 / 3.0
+									&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 2.0) {
 								if (iterable_host.getMax_uitilization()
-										+ Math.max(vm.getCpu_demand(),
-												vm.getMem_demand()) > 1) {
+										+ Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1) {
 									this.movethegap(iterable_host);
 								}
 								iterable_host.add_vm(vm);
@@ -1051,8 +941,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 1.0 / 4.0) { // T-item
 			Boolean find_host = false;
 			for (ROBP_Host iterable_host : this.host_list) {
-				if (((1.0 - iterable_host.getMax_uitilization()) >= Math.max(
-						vm.getCpu_demand(), vm.getMem_demand()))
+				if (((1.0 - iterable_host.getMax_uitilization()) >= Math.max(vm.getCpu_demand(), vm.getMem_demand()))
 						&& !this.MO_Bin_list.contains(iterable_host)) {
 					iterable_host.add_vm(vm);
 					this.update_bin_type(iterable_host);
@@ -1074,8 +963,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				&& Math.max(vm.getCpu_demand(), vm.getMem_demand()) > 0.0) { // M-item
 			Boolean find_host = false;
 			for (ROBP_Host iterable_host : this.host_list) {
-				if (((1.0 - iterable_host.getMax_uitilization()) >= Math.max(
-						vm.getCpu_demand(), vm.getMem_demand()))
+				if (((1.0 - iterable_host.getMax_uitilization()) >= Math.max(vm.getCpu_demand(), vm.getMem_demand()))
 						&& !this.TO_Bin_list.contains(iterable_host)) {
 					iterable_host.add_vm(vm);
 					this.update_bin_type(iterable_host);
@@ -1095,15 +983,14 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * find B-item and L-item with complementary relationship from these two
-	 * list, if can not find, just return empty list.
+	 * find B-item and L-item with complementary relationship from these two list, if can not find, just return empty
+	 * list.
 	 * 
 	 * @param B_list
 	 * @param L_list
 	 * @return
 	 */
-	private ArrayList<VM> find_comp_BandL(ArrayList<VM> B_list,
-			ArrayList<VM> L_list) {
+	private ArrayList<VM> find_comp_BandL(ArrayList<VM> B_list, ArrayList<VM> L_list) {
 		ArrayList<VM> comp_vm_list = new ArrayList<>();
 		Boolean find_flag = false;
 		for (VM vm_B : B_list) {
@@ -1124,8 +1011,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	}
 
 	/**
-	 * find two L-item with complementary relationship from these list, if can
-	 * not find, just return empty list.
+	 * find two L-item with complementary relationship from these list, if can not find, just return empty list.
 	 * 
 	 * @param L_list
 	 * @return
@@ -1159,22 +1045,18 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void overload_handler(ROBP_Host host) throws Exception {
-		System.out.println("overload_handler");
+		// System.out.println("overload_handler");
 		VM vm_canbe_moved = null;
 		for (String id : host.getVm_list()) {
 			VM current_vm = vm_table.get(id);
 
 			if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0) {
-				if (host.getMax_uitilization()
-						- Math.max(current_vm.getCpu_demand(),
-								current_vm.getMem_demand()) <= 1.0) {
+				if (host.getMax_uitilization() - Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0) {
 					vm_canbe_moved = current_vm;
 				}
 			} else {
-				if (host.getCpu_utilization_intwo()
-						- current_vm.getCpu_demand() <= 1.0
-						&& host.getMem_utilization_intwo()
-								- current_vm.getMem_demand() <= 1.0) {
+				if (host.getCpu_utilization_intwo() - current_vm.getCpu_demand() <= 1.0
+						&& host.getMem_utilization_intwo() - current_vm.getMem_demand() <= 1.0) {
 					vm_canbe_moved = current_vm;
 				}
 			}
@@ -1193,7 +1075,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 	 * @throws Exception
 	 */
 	private void underload_handler(ROBP_Host host) throws Exception {
-		System.out.println("underload_handler");
+		// System.out.println("underload_handler");
 		ArrayList<VM> B_list = new ArrayList<>();
 		ArrayList<VM> L_list = new ArrayList<>();
 		ArrayList<VM> S_list = new ArrayList<>();
@@ -1203,23 +1085,19 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			VM current_vm = vm_table.get(id);
 
 			if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 3.0 / 4.0
-					&& Math.max(current_vm.getCpu_demand(),
-							current_vm.getMem_demand()) > 2.0 / 3.0) { // B-item
+					&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 2.0 / 3.0) { // B-item
 				B_list.add(current_vm);
 			}
 			if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 2.0 / 3.0
-					&& Math.max(current_vm.getCpu_demand(),
-							current_vm.getMem_demand()) > 1.0 / 2.0) { // L-item
+					&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 2.0) { // L-item
 				L_list.add(current_vm);
 			}
 			if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0
-					&& Math.max(current_vm.getCpu_demand(),
-							current_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
+					&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 3.0) { // S-item
 				S_list.add(current_vm);
 			}
 			if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 3.0
-					&& Math.max(current_vm.getCpu_demand(),
-							current_vm.getMem_demand()) > 1.0 / 4.0) {// T-item
+					&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 4.0) {// T-item
 				T_list.add(current_vm);
 			}
 		}
@@ -1233,16 +1111,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					for (String iterable_id : iterable_host.getVm_list()) {
 						VM current_vm = vm_table.get(iterable_id);
 						// this is a L-item
-						if (Math.max(current_vm.getCpu_demand(),
-								current_vm.getMem_demand()) <= 2.0 / 3.0
-								&& Math.max(current_vm.getCpu_demand(),
-										current_vm.getMem_demand()) > 1.0 / 2.0) {
+						if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 2.0 / 3.0
+								&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 2.0) {
 							// if this L-item has a complementary relationship
 							// with this B-item
-							if (current_B_item.getCpu_demand()
-									+ current_vm.getCpu_demand() <= 1.0
-									&& current_B_item.getMem_demand()
-											+ current_vm.getMem_demand() <= 1.0) {
+							if (current_B_item.getCpu_demand() + current_vm.getCpu_demand() <= 1.0
+									&& current_B_item.getMem_demand() + current_vm.getMem_demand() <= 1.0) {
 								find_L_item = true;
 								break;
 							}
@@ -1268,19 +1142,15 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				for (ROBP_Host iterable_host : STM_Bin_list) {
 					for (String vm_id : iterable_host.getVm_list()) {
 						VM current_vm = vm_table.get(vm_id);
-						if (Math.max(current_vm.getCpu_demand(),
-								current_vm.getMem_demand()) <= (1 - host
+						if (Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= (1 - host
 								.getMax_uitilization())
-								&& Math.max(current_vm.getCpu_demand(),
-										current_vm.getMem_demand()) <= 1.0 / 2.0
-								&& Math.max(current_vm.getCpu_demand(),
-										current_vm.getMem_demand()) > 1.0 / 3.0) {
+								&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) <= 1.0 / 2.0
+								&& Math.max(current_vm.getCpu_demand(), current_vm.getMem_demand()) > 1.0 / 3.0) {
 							this.movethegap(host);
 							iterable_host.delete_vm(current_vm);
 							host.add_vm(current_vm);
 							this.migration_num = this.migration_num + 1;
-							if (iterable_host.getS_num_intwo() > 0
-									&& !US_Bin_list.isEmpty()
+							if (iterable_host.getS_num_intwo() > 0 && !US_Bin_list.isEmpty()
 									&& !US_Bin_list.contains(iterable_host)) {
 								ROBP_Host US_Bin = US_Bin_list.getFirst();
 								this.merge(iterable_host, US_Bin);
@@ -1321,16 +1191,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 						for (String iterable_id : iterable_host.getVm_list()) {
 							VM current_B_item = vm_table.get(iterable_id);
 							// this is a B-item
-							if (Math.max(current_B_item.getCpu_demand(),
-									current_B_item.getMem_demand()) <= 3.0 / 4.0
-									&& Math.max(current_B_item.getCpu_demand(),
-											current_B_item.getMem_demand()) > 2.0 / 3.0) {
+							if (Math.max(current_B_item.getCpu_demand(), current_B_item.getMem_demand()) <= 3.0 / 4.0
+									&& Math.max(current_B_item.getCpu_demand(), current_B_item.getMem_demand()) > 2.0 / 3.0) {
 								// if this B-item has a complementary
 								// relationship with this L-item
-								if (current_B_item.getCpu_demand()
-										+ L_item.getCpu_demand() <= 1.0
-										&& current_B_item.getMem_demand()
-												+ L_item.getMem_demand() <= 1.0) {
+								if (current_B_item.getCpu_demand() + L_item.getCpu_demand() <= 1.0
+										&& current_B_item.getMem_demand() + L_item.getMem_demand() <= 1.0) {
 									find_candidate_bin = true;
 									break;
 								}
@@ -1356,16 +1222,12 @@ public class TwoDimensional_ROBP_Event_Processor extends
 						for (String iterable_id : iterable_host.getVm_list()) {
 							VM current_L_item = vm_table.get(iterable_id);
 							// this is a L-item
-							if (Math.max(current_L_item.getCpu_demand(),
-									current_L_item.getMem_demand()) <= 2.0 / 3.0
-									&& Math.max(current_L_item.getCpu_demand(),
-											current_L_item.getMem_demand()) > 1.0 / 2.0) {
+							if (Math.max(current_L_item.getCpu_demand(), current_L_item.getMem_demand()) <= 2.0 / 3.0
+									&& Math.max(current_L_item.getCpu_demand(), current_L_item.getMem_demand()) > 1.0 / 2.0) {
 								// if this L-item has a complementary
 								// relationship with this B-item
-								if (current_L_item.getCpu_demand()
-										+ L_item.getCpu_demand() <= 1.0
-										&& current_L_item.getMem_demand()
-												+ L_item.getMem_demand() <= 1.0) {
+								if (current_L_item.getCpu_demand() + L_item.getCpu_demand() <= 1.0
+										&& current_L_item.getMem_demand() + L_item.getMem_demand() <= 1.0) {
 									find_candidate_bin = true;
 									break;
 								}
@@ -1401,8 +1263,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 				this.migration_num = this.migration_num + 1;
 			}
 
-			if (!host.getVm_list().isEmpty() && !UM_Bin_list.isEmpty()
-					&& !UM_Bin_list.contains(host)) {
+			if (!host.getVm_list().isEmpty() && !UM_Bin_list.isEmpty() && !UM_Bin_list.contains(host)) {
 				ROBP_Host UM_Bin = UM_Bin_list.getFirst();
 				this.merge(host, UM_Bin);
 				this.update_bin_type(host);
@@ -1411,8 +1272,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					this.remove_host(UM_Bin);
 				}
 			}
-		} else if (!host.getVm_list().isEmpty() && !UM_Bin_list.isEmpty()
-				&& !UM_Bin_list.contains(host)) {
+		} else if (!host.getVm_list().isEmpty() && !UM_Bin_list.isEmpty() && !UM_Bin_list.contains(host)) {
 			ROBP_Host UM_Bin = UM_Bin_list.getFirst();
 			this.merge(host, UM_Bin);
 			this.update_bin_type(host);
@@ -1439,10 +1299,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			VM new_vm = new VM(vm_id, cpu_demand, mem_demand);
 			vm_table.put(vm_id, new_vm);
 			this.insert(new_vm);
-			this.total_cpu_workload_size = this.total_cpu_workload_size
-					+ cpu_demand;
-			this.total_mem_workload_size = this.total_mem_workload_size
-					+ mem_demand;
+			this.total_cpu_workload_size = this.total_cpu_workload_size + cpu_demand;
+			this.total_mem_workload_size = this.total_mem_workload_size + mem_demand;
 		}
 
 	}
@@ -1473,10 +1331,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			if (deployed_host.getVm_list().isEmpty()) {
 				this.remove_host(deployed_host);
 			}
-			this.total_cpu_workload_size = this.total_cpu_workload_size
-					- original_cpu_demand + cpu_demand;
-			this.total_mem_workload_size = this.total_mem_workload_size
-					- original_mem_demand + mem_demand;
+			this.total_cpu_workload_size = this.total_cpu_workload_size - original_cpu_demand + cpu_demand;
+			this.total_mem_workload_size = this.total_mem_workload_size - original_mem_demand + mem_demand;
 		}
 
 	}
@@ -1506,10 +1362,8 @@ public class TwoDimensional_ROBP_Event_Processor extends
 					this.remove_host(deployed_host);
 				}
 			}
-			this.total_cpu_workload_size = this.total_cpu_workload_size
-					- finish_vm.getCpu_demand();
-			this.total_mem_workload_size = this.total_mem_workload_size
-					- finish_vm.getMem_demand();
+			this.total_cpu_workload_size = this.total_cpu_workload_size - finish_vm.getCpu_demand();
+			this.total_mem_workload_size = this.total_mem_workload_size - finish_vm.getMem_demand();
 			vm_table.remove(vm_id);
 		}
 
@@ -1520,6 +1374,7 @@ public class TwoDimensional_ROBP_Event_Processor extends
 		String event_time = event[0];
 		String event_type = event[3];
 		Long begin_time = System.nanoTime();
+		long eventtime = Long.parseLong(event_time);
 		if (event_type.equals("1")) {
 			try {
 				process_submit_event(event);
@@ -1553,12 +1408,9 @@ public class TwoDimensional_ROBP_Event_Processor extends
 		Long time_overhead = end_time - begin_time;
 
 		// event_time+time_overhead+migrations_number+host_number+current_vm_number+total_vm_number+cpu_workload+mem_workload
-		String log_string = event_time + "," + String.valueOf(time_overhead)
-				+ "," + String.valueOf(this.migration_num) + ","
-				+ String.valueOf(this.host_list.size()) + ","
-				+ String.valueOf(this.vm_table.size()) + ","
-				+ String.valueOf(this.total_vm_num) + ","
-				+ String.valueOf(this.total_cpu_workload_size) + ","
+		String log_string = event_time + "," + String.valueOf(time_overhead) + "," + String.valueOf(this.migration_num)
+				+ "," + String.valueOf(this.host_list.size()) + "," + String.valueOf(this.vm_table.size()) + ","
+				+ String.valueOf(this.total_vm_num) + "," + String.valueOf(this.total_cpu_workload_size) + ","
 				+ String.valueOf(this.total_mem_workload_size);
 
 		// record log information
@@ -1566,6 +1418,27 @@ public class TwoDimensional_ROBP_Event_Processor extends
 			this.log_writer.write(log_string);
 			this.log_writer.newLine();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// record host information
+		try {
+			if (eventtime - pre_time >= 60000000) {
+				if (host_list.size() > 0) {
+					this.host_log_writer.write(eventtime + ":" + host_list.get(0).getCpu_utilization() + "~"
+							+ host_list.get(0).getMem_utilization());
+
+					for (int i = 1; i < host_list.size(); i++) {
+						this.host_log_writer.write("," + host_list.get(i).getCpu_utilization() + "~"
+								+ host_list.get(i).getMem_utilization());
+					}
+					this.host_log_writer.newLine();
+					this.pre_time = eventtime;
+				}
+
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

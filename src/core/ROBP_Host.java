@@ -115,9 +115,9 @@ public class ROBP_Host extends Abstract_Host {
 		max_uitilization = Math.max(cpu_utilization_intwo, mem_utilization_intwo);
 		max_gap = 1 - max_uitilization;
 
-		if (max_uitilization > 1.0) {
-			throw new Exception();
-		}
+		// if (max_uitilization > 1.0) {
+		// throw new Exception();
+		// }
 
 		// if this vm canbe grouped, them put it into the corresponding list
 		if (vm.getCpu_demand() <= this.group_threshold) {

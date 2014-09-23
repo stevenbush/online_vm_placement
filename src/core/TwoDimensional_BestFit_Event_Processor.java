@@ -16,9 +16,9 @@ import java.util.Hashtable;
 public class TwoDimensional_BestFit_Event_Processor extends Abstract_Event_Processor {
 
 	/** the hash table used to store the vms */
-	private Hashtable<String, VM> vm_table;
+	public Hashtable<String, VM> vm_table;
 	/** the list used to store the host */
-	private ArrayList<BestFit_Host> host_list;
+	public ArrayList<BestFit_Host> host_list;
 	/** the overload threshold */
 	private Double overload_threshold;
 	/** the underload threshold */
